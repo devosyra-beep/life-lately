@@ -1,0 +1,29 @@
+/*
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: no-referrer
+  X-Frame-Options: DENY
+  Permissions-Policy: geolocation=(), camera=(), microphone=()
+  Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob:; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; connect-src 'self'; worker-src 'self'; manifest-src 'self'
+/
+  Cache-Control: no-cache
+/index.html
+  Cache-Control: no-cache
+/app/*
+  Cache-Control: no-cache
+/sw.js
+  Cache-Control: no-cache, no-store, must-revalidate
+  Service-Worker-Allowed: /
+/manifest.webmanifest
+  Cache-Control: no-cache
+/core.js
+  Cache-Control: no-cache
+/storage.js
+  Cache-Control: no-cache
+/app.js
+  Cache-Control: no-cache
+/styles.css
+  Cache-Control: no-cache
+/assets/landing/landing.css
+  Cache-Control: no-cache
+/assets/landing/landing.js
+  Cache-Control: no-cache

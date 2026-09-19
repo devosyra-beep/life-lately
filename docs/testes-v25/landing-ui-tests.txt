@@ -1,0 +1,12 @@
+✓ Landing mostra a frase pedida e não executa login nem banco de dados
+✓ As três fotografias originais renderizam, inclusive as imagens lazy após rolagem
+✓ 320–1440 px: sem rolagem horizontal; CTA acessível e navegação adaptada
+✓ Cinco CTAs clicáveis apontam ao HTML de acesso, sem caminho vazio ou link fictício
+✓ Âncoras levam às seções sem esconder o início sob o cabeçalho fixo
+✓ Redução de movimento desativa flutuação e animações
+✓ Créditos originais preservados e valores de demonstração identificados como prévia
+✓ Página do app mantém cadastro inicial sem usuário nem senha pré-preenchidos
+✓ Com cadastro existente simulado, o mesmo app mostra Olá, Sara e pede a senha
+✓ Nenhum erro JavaScript nas verificações de interface
+
+10 grupos de verificações da landing / acesso concluídos. Prints: /mnt/data/work_v25/qa/final

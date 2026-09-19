@@ -1,0 +1,4 @@
+# No catch-all to index.html: landing and login are separate documents.
+/app        /app/        301
+/login      /app/        302
+/login.html /app/        302

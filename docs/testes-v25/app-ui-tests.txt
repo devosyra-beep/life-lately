@@ -1,0 +1,18 @@
+✓ Tela inicial de cadastro sem conta pronta
+✓ Card de dívida abre o modal; pagamento atualiza dívida e cofrinho correto
+✓ Uso do cofrinho não reduz renda histórica
+✓ Transferência entre cofrinhos conserva saldo total e não vira gasto
+✓ Entrada de fora e máscara monetária com centavos
+✓ Ajustar saldo cria movimentação sem sobrescrever os ganhos
+✓ Criar meta, prazo de 30 anos e edição pelo card compartilham o mesmo cofrinho
+✓ Arraste contínuo preserva o elemento slider e atualiza o total em tempo real
+✓ Slider responde a gesto de toque em navegador com emulação móvel
+✓ Modo manual soma 90/100 de forma independente e só salva 100%
+✓ Falha ao salvar mostra erro e não altera estado; ganho pendente pode ser registrado
+✓ Aplicar divisão tem confirmação e não duplica ganhos já separados
+✓ Moeda chinesa global e valores negativos recusados sem perder o histórico
+✓ Modal retém o foco, fecha com Escape e navega de volta sem sobrepor a tela
+✓ 36 combinações tela/largura e 6 modais sem rolagem horizontal
+✓ Nenhum erro de JavaScript nas interações exercitadas
+
+16 grupos de verificações de UI concluídos.

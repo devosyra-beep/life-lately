@@ -1,0 +1,14 @@
+✓ Cadastro real começa sem dinheiro, dívida ou objetivo pré-carregado
+✓ Ganhei 200 reserva 100 de aluguel + 40 de dívida; 60 excedentes em Livre
+✓ Arraste contínuo preservado, previsão efetiva e modo manual respeitam cofrinhos completos
+✓ Quitei exige confirmação, dá baixa uma vez e tira o cofrinho de Organizar sem apagar histórico
+✓ Bloqueio e reentrada preservam quitação/saldos (adaptador de teste)
+✓ Aluguel mensal já pago não volta a receber no mesmo ciclo, nem no manual
+✓ Virada conserva Livre; redistribuir respeita o novo alvo sem gerar renda nem duplicar saldo
+✓ Com todos os planos completos, redistribuição vira no-op e dinheiro continua Livre
+✓ Quitação sem reserva informa o complemento e não é executada só por abrir o modal
+✓ Moeda global e interface verificados de 320 a 1440 px, sem rolagem horizontal
+— Service worker e recarregamento offline no navegador: não executados neste modo.
+✓ Nenhuma exceção JavaScript nos fluxos testados
+
+11 grupos de UI concluídos. Evidências: /tmp/ll-v24-qa-umlzz1o3

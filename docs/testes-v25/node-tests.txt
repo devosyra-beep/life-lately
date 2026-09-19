@@ -1,0 +1,130 @@
+===== tests/core.test.cjs =====
+✓ 100 → aluguel 85,11; luz 6,38; dívida 8,51, centavos conservados
+✓ Dinheiro anterior ao plano fica pendente; aplicar é idempotente
+✓ Alvos não recebem além do necessário; sobra vai ao Livre
+✓ Pagamento baixa a dívida e o cofrinho correto, nunca a renda
+✓ Pagamento com complemento de fora é explícito
+✓ Transferência preserva total, não vira ganho nem gasto
+✓ Retirada altera a próxima distribuição sem mudar o passado
+✓ Correção de ganho conserva proporções originais; exclusão protege gasto já feito
+✓ Meta de 1 real, prazo de 30 anos e meta vencida não bloqueiam
+✓ Manual livre: total inválido rejeitado; 100% aceito
+✓ Migração v8: saldos, histórico, nomes e moeda preservados e idempotentes
+✓ Arquivar preserva saldo e histórico; cofrinho com dinheiro não é apagado
+✓ Formatos contábeis e moedas
+✓ Muitos pequenos ganhos conservam cada centavo
+
+14 testes concluídos.
+===== tests/planning.test.cjs =====
+✓ Experiência vazia: nenhum registro de virada ou reinício nasce pronto
+✓ Recomeçar não toca em perfil, moeda, ganhos, saldos, pagamentos ou dívidas
+✓ Após reinício, próximo ganho fica a separar e nenhum cofrinho recebe escondido
+✓ Novo plano volta a distribuir sem reaplicar dinheiro histórico
+✓ Dívida continua pagável durante pausa; editar o plano da dívida a reativa
+✓ Desfazer reinício restaura apenas planos, inclusive referência e divisão manual
+✓ Desfazer nunca sobrescreve uma edição de planejamento posterior
+✓ Normalização/reabertura preserva a possibilidade de desfazer
+✓ Reinício é confirmado: assinatura desatualizada recusa sem mutação
+✓ Virada mantém toda a história financeira; novo mês é filtro, não apagamento
+✓ Somente itens marcados renovam e nenhum vira uma despesa ou pagamento
+✓ Renovar não limpa saldo acumulado nem financia novamente o valor já separado
+✓ Dia 31: fevereiro fica no último dia e março volta a 31
+✓ Dezembro vira janeiro sem trocar prazos plurianuais
+✓ Mesmo pedido duas vezes não vira dois meses nem duplica fechamento
+✓ Não avança inadvertidamente vários meses futuros
+✓ Não seleciona dívidas, metas plurianuais ou arquivados para renovar
+✓ Desfazer virada mantém uso feito depois e recupera datas/mês anteriores
+✓ Fotografia do fechamento não se altera ao editar um ganho antigo
+✓ Estado v22 migra sem mudar IDs, contas, rateios e saldos; segunda leitura estável
+✓ Meta financeira legada não ressuscita depois de reset/reabertura
+✓ Repetição sem data é recusada e prazo longo comum nunca vira mensal por inferência
+✓ Editar só o valor em fevereiro mantém a âncora do vencimento em 31
+
+23 testes de planejamento e virada concluídos.
+===== tests/completion.test.cjs =====
+✓ Manual: 80 previstos, apenas 20 faltando; 60 de excesso mais 20 livres = 80 em Livre
+✓ Manual: cofrinho completo fica com 0 efetivo, mesmo com barra salva em 100%
+✓ Todas as barras podem continuar sendo arrastadas independentemente; teto não altera configuração
+✓ Auto: excedente de um plano não é empurrado para outro compromisso
+✓ Cofrinho completo no automático segue fora dos próximos aportes
+✓ Limite funciona sem data e não presume uma meta mensal para planos únicos
+✓ Distribuir pendências respeita o teto a cada ganho e repetir não duplica
+✓ Aumentar ganho antigo limita apenas o acréscimo e preserva o já separado
+✓ Aumentar ganho que já quitou dívida não ressuscita o cofrinho concluído
+✓ Reduzir/excluir ganho já usado segue protegido
+✓ Transferência de outra reserva respeita teto e leva o excedente a Livre sem novo ganho
+✓ Transferir de Livre para alvo parcial mantém a sobra na origem, sem lançar ida e volta
+✓ Aporte externo também respeita limite; não vira receita fictícia
+✓ Correção para saldo real acima do alvo é preservada, mas bloqueia novos aportes
+✓ Retirar de meta única para emergência reabre a necessidade sem alterar renda
+✓ Livre atravessa a virada: não vira ganho, pendência ou aporte automático
+✓ Redistribuição opcional de Livre usa o mesmo limite e mantém renda/histórico antigos
+✓ Livre manual não obriga usar tudo: porcentagem livre continua intocada
+✓ Livre: plano completo é no-op; saldo insuficiente e confirmação velha são recusados
+✓ Consumo mensal conta no ciclo: aluguel pago não começa a ser juntado de novo naquele mês
+✓ Na virada, só o compromisso renovado abre outro ciclo; saldo existente já conta
+✓ Virar mês sem renovar não reabre automaticamente cofrinho mensal já atendido
+✓ Desfazer virada altera só ciclo/planos, não desfaz redistribuição já confirmada
+✓ Dívida: reservar reduz a falta de reserva, não registra um pagamento fictício
+✓ Dívida financiada para de receber, mas continua em Organizar até a confirmação
+✓ Quitei consome reserva UMA vez e tira o cofrinho, mantendo os registros
+✓ Saldo insuficiente exige confirmação de complemento, sem fazer reserva ficar negativa
+✓ Pagar uma parte reduz a dívida e a reserva, conservando o que falta reservar
+✓ Pagar dívida com outra origem devolve eventual sobra da reserva original a Livre
+✓ Duas dívidas em cofrinho legado nunca reutilizam a mesma reserva
+✓ Quitar uma dívida compartilhada por último conclui a reserva; reabrir dívida não duplica cofrinho
+✓ Saldo antigo acima do limite não é confiscado na atualização
+✓ Centavos e 800 aportes/transferências mistos: saldo geral sempre se conserva
+✓ Migração v23: virada com desfazer mantém assinatura válida e restaura o ciclo anterior
+✓ Migração v23: assinatura obsoleta não permite sobrescrever edição posterior
+✓ Origem arquivada não pode financiar pagamentos diretos ou quitação
+
+36 testes de limites, Livre e quitação concluídos.
+===== tests/storage.test.cjs =====
+✓ Conta nova: senha não aparece em texto puro; dados criptografados
+✓ Cadastro e envelope v1 antigos abrem sem perder 35/65 ou a moeda
+✓ Fila de gravação: a última alteração não é perdida
+✓ Falha só no localStorage ainda salva pelo IndexedDB
+✓ Falha só no IndexedDB ainda salva pelo localStorage
+✓ Falha nos dois armazenamentos é reportada, sem falso sucesso
+✓ Duas abas: revisão antiga não sobrescreve a revisão mais recente
+✓ Backup v2 restaura cadastro, senha e centavos em outro aparelho
+✓ Backup v1 abre na instalação original, não finge portabilidade
+✓ Cifra alterada e arquivo estranho são recusados
+✓ Bloqueio tira a chave da memória e impede novas gravações
+✓ Novo cadastro não apaga dados órfãos nem uma conta existente
+✓ Virada criptografada e backup preservam histórico, saldos e desfazer em outro aparelho
+✓ Reinício salvo não ressuscita planos ao desbloquear; desfazer restaura só planejamento
+✓ v24: backup/reabertura preservam ciclo pago, quitação, sobra Livre e limites
+
+15 testes de armazenamento concluídos.
+===== tests/zero-storage.test.cjs =====
+✓ O estado inicial não contém perfil, meta financeira, dívidas ou ganhos
+✓ Conta e plano antigos são ignorados, mesmo na mesma origem
+✓ Gravação posterior ao primeiro acesso persiste sem limpar a cada abertura
+✓ Recomeçar apaga cadastro, estado espelhado, IndexedDB e chave da memória
+✓ Depois da limpeza, é possível criar outra conta totalmente vazia
+✓ Não limpa outras chaves nem o banco da edição anterior
+✓ Reset exige acesso desbloqueado
+✓ Falha na exclusão não informa sucesso nem perde o cadastro
+✓ Uma aba antiga não consegue restaurar valores depois do reset
+✓ Formato de backup continua restaurável apenas por ação explícita
+
+10 testes de primeiro acesso e reset concluídos.
+===== tests/sw.test.cjs =====
+✓ Todos os arquivos do precache existem no pacote, incluindo landing e app
+✓ Instalar não ativa a atualização no meio de uma sessão
+✓ A ativação pode ser solicitada explicitamente
+✓ Só os caches antigos do Life Lately são removidos
+✓ Raiz e index.html apresentam a landing
+✓ Endereços do app apresentam login, nunca a landing
+✓ Landing tem fallback offline sem depender de sessão financeira
+✓ Login tem fallback offline separado
+✓ Engine e app assets são carregados da versão em cache
+✓ CSS e fotografias da landing têm fallback offline
+✓ URLs inexistentes não são transformadas em página de login
+✓ Não intercepta serviços externos, gravações nem arquivos de dados
+✓ PWA mantém a identidade antiga e inicia em /app/
+✓ HTML de login usa recursos do app, sem misturar CSS da landing
+
+14 verificações de service worker / pacote concluídas (simulação).

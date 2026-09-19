@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#b95072">
+<meta name="description" content="Seu dinheiro, seus planos. Um espaço pessoal para organizar o que entra.">
+<meta name="robots" content="noindex,nofollow">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<title>Acessar · Life Lately</title>
+<link rel="icon" href="../icons/icon-192.png">
+<link rel="apple-touch-icon" href="../icons/icon-192.png">
+<link rel="manifest" href="../manifest.webmanifest">
+<link rel="stylesheet" href="../styles.css">
+<script defer src="../core.js"></script>
+<script defer src="../storage.js"></script>
+<script defer src="../app.js"></script>
+</head>
+<body>
+<div id="access" class="access"><p class="loading">Abrindo seu espaço…</p></div>
+<div id="shell" class="shell" hidden>
+  <aside id="sidebar" class="sidebar"></aside>
+  <div class="main-wrap">
+    <header id="topbar" class="topbar"></header>
+    <main id="view" class="view" tabindex="-1"></main>
+  </div>
+  <nav id="mobileNav" class="mobile-nav" aria-label="Navegação principal"></nav>
+</div>
+<dialog id="dialog" aria-labelledby="dialogTitle"><div id="dialogRoot"></div></dialog>
+<div id="toast" class="toast" role="status" aria-live="polite"></div>
+<input id="backupFile" type="file" accept="application/json,.json" hidden>
+<noscript><p>Ative o JavaScript do navegador para abrir o Life Lately.</p></noscript>
+</body>
+</html>

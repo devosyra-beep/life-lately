@@ -1,0 +1,15 @@
+✓ Dois atalhos no alto de Organizar, cadastro começa vazio
+✓ Recomeçar sem planos não cria operações nem apaga o acesso
+✓ Plano mensal, despesa avulsa, meta de 30 anos, ganho e pagamento funcionam pela UI
+✓ Virada pré-seleciona apenas recorrentes; cancelar não modifica nada
+✓ Virada atualiza Início, Ganhos e mês de referência sem zerar metas/saldos/dívidas
+✓ Reabertura mantém virada e bloqueia segundo avanço futuro
+✓ Desfazer virada devolve mês/datas sem tocar na movimentação
+✓ Reinício exige confirmação e limpa apenas planejamento em todas as telas
+✓ Reinício/desfazer continuam corretos após fechar, autenticar e reabrir
+✓ Histórico mostra reinício e virada, inclusive ações desfeitas
+✓ Organizar e os dois modais sem overflow em 320, 360, 390, 768, 1280 e 1440 px
+✓ Modal mantém foco de teclado e Escape cancela sem alteração
+✓ Erro de gravação não limpa o plano nem mostra sucesso falso
+✓ Nenhum erro de JavaScript durante os fluxos
+14 verificações UI. Imagens: /tmp/life-lately-planning-qa-8gjcogho

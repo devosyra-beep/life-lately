@@ -1,0 +1,31 @@
+{
+  "product": "Life Lately",
+  "version": 24,
+  "date": "2026-09-19",
+  "stateSchema": 12,
+  "purpose": "Target caps in all allocation modes, optional free-balance redistribution and explicit debt settlement",
+  "storage": {
+    "account": "lifeLatelyZeroV22Account",
+    "fallback": "lifeLatelyZeroV22State",
+    "indexedDB": "life-lately-zero-v22",
+    "unchangedFromVersion23": true
+  },
+  "tests": {
+    "nodeTests": 104,
+    "browserUIgroups": 46,
+    "browserUIstorage": "in-memory test adapter; crypto tested independently",
+    "realLocalhostBrowser": "blocked by environment; no policy workaround attempted",
+    "physicalMobile": false,
+    "realBrowserPWAOffline": false
+  },
+  "files": {
+    "index.html": "e2fbcad2bd5622056654b6de4d4c7711721321a41b73fc9e02b1b28e9ece8a04",
+    "styles.css": "f09eaf025b993b544e81019d1aa1bffac7900d47233d93dbb001500a9743c2bc",
+    "core.js": "aaac98869f1ef5691fd63f61de26e2e3a6f4d02e7dababcb971f47c45a59d5e5",
+    "storage.js": "51e18c0bc4721b975e880fe12c26ccc7fd1045d189611aec89cc5cb08e387e0b",
+    "app.js": "61cf33d2cd4526bda36ed24282522c7e70f2f60a7f3fc744b4ac70b42fef4811",
+    "sw.js": "08cb32a899cbd5d32673f885ea8b3beb0b2f7035efe991ae7bbe7a870f41be22",
+    "manifest.webmanifest": "27d8d4b2130b15207441a0f1b29cd7a59ecfb4e312610d7b9b3b264c9688e64d",
+    "_headers": "cfa649d62adc47dc2a44635cdb94d3fad933a9ad96580e2af3f75416dcc9e5d5"
+  }
+}

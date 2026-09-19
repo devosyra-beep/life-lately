@@ -1,0 +1,12 @@
+✓ Nova chamada está na landing e a chamada antiga foi removida
+✓ Todos os cinco acessos, incluindo a prévia de Ganhei, levam ao app
+✓ Imagens, CSS, JavaScript, manifesto e links locais resolvem corretamente
+✓ Todas as âncoras da landing têm destino
+✓ Heading principal único, landmark main e imagens com descrição
+✓ As três imagens fornecidas estão aplicadas, com WebP responsivo e JPG de fallback
+✓ A landing não carrega nem lê o banco ou o cadastro financeiro
+✓ Namespace de armazenamento v22–v24 preservado
+✓ Nenhum arquivo de fonte incluído; tipografia externa tem fallback
+✓ CSP permite a tipografia prevista e não há redirecionamento global para a landing
+
+10 verificações estáticas concluídas.

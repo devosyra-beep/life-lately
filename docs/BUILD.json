@@ -1,0 +1,38 @@
+{
+  "product": "Life Lately",
+  "version": "v29",
+  "date": "2026-09-19",
+  "purpose": "Microajuste da hero e navegação progressiva da landing; app preservado",
+  "entries": {
+    "landing": "index.html",
+    "app": "app/index.html"
+  },
+  "stateSchema": 12,
+  "preservedFromV24": {
+    "core.js": true,
+    "storage.js": true,
+    "styles.css": true
+  },
+  "originalImagesPreserved": {
+    "hero-night.jpg": true,
+    "golden-sea.jpg": true,
+    "night-table.jpg": true
+  },
+  "storage": {
+    "account": "lifeLatelyZeroV22Account",
+    "fallback": "lifeLatelyZeroV22State",
+    "indexedDB": "life-lately-zero-v22",
+    "resetAdded": false
+  },
+  "tests": {
+    "nodeChecks": 112,
+    "pythonStaticChecks": 10,
+    "browserUIGroups": 51,
+    "browserRendering": "Chromium, in-memory fixtures",
+    "realHTTPNavigation": "blocked by environment administrator; not bypassed",
+    "actualPWAInstallation": false,
+    "remoteFonts": "not loaded in QA; fallback tested",
+    "deployedToNetlify": false,
+    "physicalMobile": false
+  }
+}
