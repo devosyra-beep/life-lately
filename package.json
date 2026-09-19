@@ -1,0 +1,25 @@
+{
+  "name": "life-lately",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Life Lately — organização financeira local, sem servidor e sem conta na nuvem.",
+  "scripts": {
+    "build": "node scripts/build-www.mjs && node scripts/stamp-version.mjs",
+    "test": "node scripts/run-tests.mjs",
+    "sync": "npm run build && cap sync",
+    "android": "npm run sync && cap open android",
+    "ios": "npm run sync && cap open ios",
+    "serve": "npm run build && node scripts/serve-www.mjs"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^7.0.0"
+  },
+  "dependencies": {
+    "@capacitor/core": "^7.0.0",
+    "@capacitor/android": "^7.0.0",
+    "@capacitor/ios": "^7.0.0",
+    "@capacitor/app": "^7.0.0",
+    "@capacitor/status-bar": "^7.0.0",
+    "@capacitor/splash-screen": "^7.0.0"
+  }
+}

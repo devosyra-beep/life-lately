@@ -12,7 +12,7 @@ A chamada principal agora é **A vida acontece. Seu dinheiro acompanha.**
 
 ## Publicar / atualizar no GitHub Pages
 
-Este pacote é estático e pode ser hospedado gratuitamente no GitHub Pages. Crie um repositório público, envie **a pasta inteira** e, em **Settings → Pages**, escolha a branch `main` e a pasta `/ (root)` como origem. Depois de alguns minutos, o GitHub fornecerá o endereço público do site.
+Este pacote é estático e pode ser hospedado gratuitamente no GitHub Pages. Use um repositório público, envie **a pasta inteira** e, em **Settings → Pages**, escolha a branch `main` e a pasta `/ (root)` como origem. O site publicado fica em `https://<conta>.github.io/<repositório>/`.
 
 Não envie apenas o HTML nem apenas a pasta `app`: a landing, o aplicativo, os assets, os scripts, o manifesto e o `sw.js` precisam permanecer juntos. O arquivo `.nojekyll` evita que o processamento padrão do GitHub Pages esconda arquivos iniciados por sublinhado.
 

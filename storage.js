@@ -4,7 +4,7 @@
 (function(root){
 'use strict';
 const ACCOUNT_KEY='lifeLatelyZeroV22Account',FALLBACK='lifeLatelyZeroV22State',DB_NAME='life-lately-zero-v22',STORE='app',KEY='state',FORMAT='life-lately-encrypted-v1',ITERATIONS=250000;
-let account=null,key=null,revision=null,queue=Promise.resolve();
+let account=null,key=null,revision=null,queue=Promise.resolve(),migrated=false;
 const b64=bytes=>{let r='';for(const v of new Uint8Array(bytes))r+=String.fromCharCode(v);return btoa(r);};
 const bytes=s=>Uint8Array.from(atob(s),c=>c.charCodeAt(0));
 const salt=()=>b64(crypto.getRandomValues(new Uint8Array(16)));
@@ -24,9 +24,35 @@ async function read(){const values=[];try{const v=await idbRead();if(v)values.pu
 const token=e=>e?.revision||e?.data||null;
 async function write(e){const results=await Promise.allSettled([idbWrite(e),Promise.resolve().then(()=>localStorage.setItem(FALLBACK,JSON.stringify(e)))]);if(results.every(r=>r.status==='rejected'))throw Error('Não foi possível salvar neste navegador. Libere espaço ou exporte um backup.');}
 async function atomic(fn){return navigator.locks?navigator.locks.request(DB_NAME+'-write',fn):fn();}
-async function unlock(password){account=readAccount();if(!account)throw Error('Crie seu acesso primeiro.');if(!await verify(password,account))throw Error('A senha não confere. Tente novamente.');const k=await derive(password,account);let e=await read(),raw;try{raw=e?e.format===FORMAT?await decrypt(e,k):typeof e==='string'?JSON.parse(e):e:LL.empty();}catch{throw Error('Não foi possível abrir os dados. Não apague o navegador; tente restaurar um backup.');}const state=LL.normalize(raw);LL.validate(state);key=k;revision=token(e);return state;}
+// Um cadastro só passa a existir depois de uma gravação bem-sucedida (ver create()).
+// Logo, cadastro sem carga salva significa despejo de armazenamento, nunca primeiro uso.
+// Abrir um estado vazio aqui apagaria a chance de restaurar um backup: recusamos.
+function orphanError(){const e=Error('Seu cadastro está neste aparelho, mas os dados salvos não foram encontrados. Restaure um backup para recuperá-los.');e.code='no-data';return e;}
+async function unlock(password){
+ account=readAccount();if(!account)throw Error('Crie seu acesso primeiro.');
+ if(!await verify(password,account))throw Error('A senha não confere. Tente novamente.');
+ const k=await derive(password,account);
+ const e=await read();
+ if(!e)throw orphanError();
+ let raw;
+ try{raw=e.format===FORMAT?await decrypt(e,k):typeof e==='string'?JSON.parse(e):e;}
+ catch{throw Error('Não foi possível abrir os dados. Não apague o navegador; tente restaurar um backup.');}
+ const state=LL.normalize(raw);LL.validate(state);
+ key=k;revision=token(e);
+ // Regravação no desbloqueio só se a normalização realmente mudou o esquema.
+ migrated=Number(raw?.version)!==Number(state.version)||!!state.migrationNotes?.length;
+ return state;
+}
+// Saída explícita para o cadastro órfão: remove a chave de acesso somente quando não há
+// nenhuma carga salva para perder, e somente com a senha correta.
+async function discardOrphanAccount(password){
+ const a=readAccount();if(!a)throw Error('Não há cadastro neste aparelho.');
+ if(!await verify(password,a))throw Error('A senha não confere. Tente novamente.');
+ await atomic(async()=>{if(await read())throw Error('Há dados salvos neste aparelho. Entre normalmente em vez de recomeçar.');localStorage.removeItem(ACCOUNT_KEY);});
+ account=null;key=null;revision=null;
+}
 async function create(name,password){requireCrypto();name=String(name).trim();if(name.length<2)throw Error('Como você quer ser chamada?');if(password.length<8)throw Error('Use pelo menos 8 caracteres na senha.');if(readAccount())throw Error('Já existe um acesso neste navegador.');const a={version:1,username:name.slice(0,40),usernameNorm:norm(name),authSalt:salt(),dataSalt:salt(),createdAt:new Date().toISOString(),iterations:ITERATIONS};a.authHash=b64(await hash(password,a));const k=await derive(password,a),state=LL.empty();state.profile.name=a.username;const e=await encrypt(state,k);
- await atomic(async()=>{if(readAccount())throw Error('Já existe um acesso neste navegador.');if(await read())throw Error('Há dados anteriores sem o cadastro. Restaure o backup em vez de sobrescrever.');localStorage.setItem(ACCOUNT_KEY,JSON.stringify(a));try{await write(e);}catch(err){localStorage.removeItem(ACCOUNT_KEY);throw err;}});account=a;key=k;revision=token(e);return state;
+ await atomic(async()=>{if(readAccount())throw Error('Já existe um acesso neste navegador.');if(await read())throw Error('Há dados anteriores sem o cadastro. Restaure o backup em vez de sobrescrever.');localStorage.setItem(ACCOUNT_KEY,JSON.stringify(a));try{await write(e);}catch(err){localStorage.removeItem(ACCOUNT_KEY);throw err;}});account=a;key=k;revision=token(e);migrated=false;return state;
 }
 function save(state){const snapshot=LL.clone(state),k=key;LL.validate(snapshot);const task=queue.catch(()=>{}).then(async()=>{if(!k)throw Error('Desbloqueie o app para salvar.');return atomic(async()=>{const current=await read();if(token(current)!==revision)throw Error('Os dados mudaram em outra aba. Feche e reabra o app antes de continuar.');const e=await encrypt(snapshot,k);await write(e);revision=token(e);
  const currentAccount=readAccount(),displayName=String(snapshot.profile?.name||'').trim().slice(0,40);
@@ -68,5 +94,17 @@ function erase(){
  queue=task;return task;
 }
 
-root.LLStore={readAccount,unlock,create,save,lock,backup,inspectBackup,restore,erase,isUnlocked:()=>!!key,keys:{DB_NAME,ACCOUNT_KEY,FALLBACK}};
+// Sem armazenamento persistente o navegador pode despejar o IndexedDB sem aviso algum.
+// Como este app não guarda nada em servidor, esse despejo é perda definitiva de dados.
+// O pedido é idêmpotente e silencioso: nunca interrompe o fluxo de quem está usando.
+async function persist(){
+ try{
+  if(!navigator.storage?.persist)return {supported:false,persisted:false};
+  if(await navigator.storage.persisted?.())return {supported:true,persisted:true};
+  return {supported:true,persisted:await navigator.storage.persist()};
+ }catch{return {supported:false,persisted:false};}
+}
+async function estimate(){try{const e=await navigator.storage?.estimate?.();return e?{usage:e.usage||0,quota:e.quota||0}:null;}catch{return null;}}
+
+root.LLStore={readAccount,unlock,create,save,lock,backup,inspectBackup,restore,erase,persist,estimate,discardOrphanAccount,hasStoredData:async()=>!!await read(),wasMigrated:()=>migrated,isUnlocked:()=>!!key,keys:{DB_NAME,ACCOUNT_KEY,FALLBACK}};
 })(globalThis);

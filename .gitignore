@@ -1,0 +1,23 @@
+node_modules/
+www/
+
+# Projetos nativos: versionados, mas sem artefatos de build nem segredos de assinatura.
+android/.gradle/
+android/build/
+android/app/build/
+android/local.properties
+android/app/release/
+*.keystore
+*.jks
+key.properties
+
+ios/App/Pods/
+ios/App/build/
+ios/App/output/
+ios/App/App.xcworkspace/xcuserdata/
+ios/App/App.xcodeproj/xcuserdata/
+*.mobileprovision
+*.p8
+*.p12
+
+.DS_Store

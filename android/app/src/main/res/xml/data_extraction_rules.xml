@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Android 12+. Nenhum dado do app entra em backup na nuvem nem em transferencia
+     entre aparelhos: a copia de seguranca deste app e o backup cifrado exportado
+     pela propria pessoa, protegido pela senha dela. -->
+<data-extraction-rules>
+    <cloud-backup>
+        <exclude domain="root" />
+    </cloud-backup>
+    <device-transfer>
+        <exclude domain="root" />
+    </device-transfer>
+</data-extraction-rules>

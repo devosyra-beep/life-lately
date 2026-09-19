@@ -1,0 +1,24 @@
+{
+  "appId": "com.osyra.lifelately",
+  "appName": "Life Lately",
+  "webDir": "www",
+  "android": {
+    "allowMixedContent": false,
+    "backgroundColor": "#fcf8f5"
+  },
+  "ios": {
+    "contentInset": "never",
+    "backgroundColor": "#fcf8f5",
+    "limitsNavigationsToAppBoundDomains": true
+  },
+  "server": {
+    "androidScheme": "https"
+  },
+  "plugins": {
+    "SplashScreen": {
+      "launchAutoHide": false,
+      "backgroundColor": "#fcf8f5",
+      "androidScaleType": "CENTER_CROP"
+    }
+  }
+}

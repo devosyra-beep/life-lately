@@ -7,7 +7,7 @@ const brand=()=>`<span class="brand-mark" aria-hidden="true"><span>✦</span></s
 const btn=(text,action,id='',cls='primary',extra='')=>`<button type="button" class="${cls}" data-action="${action}" ${id?`data-id="${esc(id)}"`:''} ${extra}>${text}</button>`;
 const arrow=()=>`<span class="chev" aria-hidden="true">${icon('chevron')}</span>`;
 const navs=[['overview','home','Início'],['income','income','Ganhos'],['organize','organize','Organizar'],['goals','goals','Metas'],['debts','debts','Dívidas']];
-let state=null,page='overview',busy=false,modalBack=null,opener=null,installPrompt=null,swWaiting=null,monthFilter=LL.today().slice(0,7),toastTimer,hiddenSince=0;
+let state=null,page='overview',busy=false,modalBack=null,opener=null,installPrompt=null,swWaiting=null,monthFilter=LL.today().slice(0,7),toastTimer,hiddenSince=0,orphanPassword='';
 const money=v=>LL.fmt(state||LL.empty(),v),compactMoney=v=>LL.fmt(state||LL.empty(),v,true);
 const currencySymbol=()=>LL.CURRENCIES[state?.preferences.currency||'BRL'][1];
 const numText=v=>Number(v||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
@@ -93,8 +93,10 @@ function renderDebts(){
  const missing=active.reduce((n,d)=>n+LL.cents(LL.debtFunding(state,d).remaining),0)/100;
  return head('Suas dívidas.','',btn(icon('plus'),'new-debt','','secondary compact','aria-label="Criar dívida"'))+`<div class="balance-strip"><div><span class="label">Falta reservar</span><div class="amount">${money(missing)}</div><span class="fine">${money(s.debts)} ainda a pagar</span></div><span class="badge ${active.length?'rose':'green'}">${active.length?`${active.length} em aberto`:'Em dia'}</span></div><div class="pocket-grid">${active.length?active.map(debtCard).join(''):emptyBox('🌿','Nenhuma dívida em aberto.','Um espaço mais leve por aqui.','new-debt','Adicionar dívida')}</div>${done.length?`<details class="quiet-details"><summary>Quitadas · ${done.length}</summary><div class="pocket-grid">${done.map(debtCard).join('')}</div></details>`:''}`;
 }
+const appVersion=()=>globalThis.LLPlatform?.version||'25';
+const platformLabel=()=>({ios:'iPhone',android:'Android'})[globalThis.LLPlatform?.platform]||'individual';
 function settingsRow(ic,name,value,action){return `<button class="row-card" data-action="${action}"><span class="tile-icon">${icon(ic)}</span><span class="grow"><span class="name">${name}</span><small>${value}</small></span>${arrow()}</button>`;}
-function renderSettings(){return head('Seu espaço.','Configurações')+`<div class="settings-list">${settingsRow('spark','Seu nome',esc(state.profile.name||'Como quer ser chamada?'),'profile')}${settingsRow('coins','Moeda',`${LL.CURRENCIES[state.preferences.currency][1]} · ${LL.CURRENCIES[state.preferences.currency][0]}`,'currency')}${settingsRow('calendar','Virar o mês',monthText(LL.planningMonth(state))+' · saldos preservados','month-rollover')}${settingsRow('refresh','Recomeçar planejamento','Só os planos, não o seu dinheiro','planning-reset')}${settingsRow('shield','Backup e seus dados','Guardar uma cópia · restaurar','backup')}${settingsRow('phone','Instalar no celular','Seu app na tela inicial','install')}${settingsRow('archive','Arquivados','Histórico preservado','archives')}${settingsRow('info','Como funciona','Divisão, cofrinhos e privacidade','help')}${settingsRow('lock','Bloquear agora','Pedir minha senha novamente','lock')}${swWaiting?settingsRow('refresh','Atualização disponível','Seus dados serão preservados','update'):''}</div><p class="settings-note">${icon('shield')} Seus registros ficam neste navegador, protegidos pela sua senha.</p><div class="version-note">Life Lately · versão 25 · individual</div>`;}
+function renderSettings(){return head('Seu espaço.','Configurações')+`<div class="settings-list">${settingsRow('spark','Seu nome',esc(state.profile.name||'Como quer ser chamada?'),'profile')}${settingsRow('coins','Moeda',`${LL.CURRENCIES[state.preferences.currency][1]} · ${LL.CURRENCIES[state.preferences.currency][0]}`,'currency')}${settingsRow('calendar','Virar o mês',monthText(LL.planningMonth(state))+' · saldos preservados','month-rollover')}${settingsRow('refresh','Recomeçar planejamento','Só os planos, não o seu dinheiro','planning-reset')}${settingsRow('shield','Backup e seus dados','Guardar uma cópia · restaurar','backup')}${globalThis.LLPlatform?.native?'':settingsRow('phone','Instalar no celular','Seu app na tela inicial','install')}${settingsRow('archive','Arquivados','Histórico preservado','archives')}${settingsRow('info','Como funciona','Divisão, cofrinhos e privacidade','help')}${settingsRow('lock','Bloquear agora','Pedir minha senha novamente','lock')}${swWaiting?settingsRow('refresh','Atualização disponível','Seus dados serão preservados','update'):''}</div><p class="settings-note">${icon('shield')} Seus registros ficam neste navegador, protegidos pela sua senha.</p><div class="version-note">Life Lately · versão ${esc(appVersion())} · ${esc(platformLabel())}</div>`;}
 function splitRows(shares,{totalLabel='Separado',emptyText='Defina seus cofrinhos em Organizar.',showTotal=true}={}){
  const entries=Object.entries(shares||{}).filter(([,v])=>v>0),total=entries.reduce((a,[,v])=>a+v,0);
  if(!entries.length)return `<div class="split-box"><p class="fine">${emptyText}</p></div>`;
@@ -293,9 +295,33 @@ function renderAccess(){
  state=null;$('shell').hidden=true;$('access').hidden=false;document.title='Life Lately · seu espaço';
  const account=LLStore.readAccount(),exists=!!account;
  $('access').innerHTML=`<div class="access-card"><div class="brand">${brand()}</div><span class="kicker">${exists?'Seu espaço está aqui':'Um espaço só seu'}</span><h1 style="margin-top:9px">${exists?`Olá, ${esc(account.username.split(' ')[0])}.`:'Seu dinheiro.<br>Seus próximos planos.'}</h1><p class="subtitle">${exists?'Vamos continuar?':'Comece criando o seu acesso.'}</p><form id="accessForm"><div id="accessError" class="error" role="alert" hidden></div>${!exists?field('name','Como quer ser chamada?','','text','required minlength="2" maxlength="40" autocomplete="given-name" placeholder="Seu nome"'):''}<div class="field"><label for="accessPassword">${exists?'Sua senha':'Crie uma senha'}</label><div class="password-shell"><input id="accessPassword" name="password" type="password" required ${exists?'':'minlength="8"'} autocomplete="${exists?'current-password':'new-password'}" ${exists?'':'placeholder="Pelo menos 8 caracteres"'}>${btn('Mostrar','show-password','','')}</div></div>${!exists?field('confirm','Confirme a senha','','password','required minlength="8" autocomplete="new-password"'):''}<button type="submit" class="primary full">${exists?'Entrar':'Criar meu acesso'}</button></form><div class="access-footer">${icon('lock')} Seus dados ficam neste navegador.</div>${optionalDetails('<p>Guarde sua senha e faça backups. Não existe recuperação automática se você perder os dois.</p>','Sobre o acesso')}${btn('Restaurar um backup','import','','link-button full')}</div>`;
- bindForm('accessForm',async form=>{const f=new FormData(form),pass=String(f.get('password'));if(!exists&&pass!==f.get('confirm'))throw Error('As senhas precisam ser iguais.');busy=true;const submit=form.querySelector('[type=submit]');submit.disabled=true;submit.textContent=exists?'Entrando…':'Criando…';try{const s=exists?await LLStore.unlock(pass):await LLStore.create(f.get('name'),pass);busy=false;form.reset();await showUnlocked(s,exists);}catch(e){busy=false;submit.disabled=false;submit.textContent=exists?'Entrar':'Criar meu acesso';throw e;}});
+ bindForm('accessForm',async form=>{const f=new FormData(form),pass=String(f.get('password'));if(!exists&&pass!==f.get('confirm'))throw Error('As senhas precisam ser iguais.');busy=true;const submit=form.querySelector('[type=submit]');submit.disabled=true;submit.textContent=exists?'Entrando…':'Criando…';try{const s=exists?await LLStore.unlock(pass):await LLStore.create(f.get('name'),pass);busy=false;form.reset();await showUnlocked(s,exists);}catch(e){busy=false;submit.disabled=false;submit.textContent=exists?'Entrar':'Criar meu acesso';if(e?.code==='no-data'){form.reset();renderRecovery(pass);return;}throw e;}});
 }
-async function showUnlocked(s,migrating=true){state=s;page='overview';monthFilter=LL.planningMonth(s);$('access').hidden=true;$('access').innerHTML='';$('shell').hidden=false;render();if(migrating){try{await LLStore.save(state);}catch(e){toast(e.message);}}if(state.migrationNotes?.length)toast('Confira os dados antigos em Backup antes de fazer alterações.');}
+// Cadastro válido sem carga salva: despejo de armazenamento. Em vez de abrir um app
+// vazio, oferecemos as duas únicas saídas honestas: restaurar backup ou recomeçar.
+function renderRecovery(password){
+ state=null;orphanPassword=password||'';
+ $('shell').hidden=true;$('access').hidden=false;document.title='Life Lately · recuperação';
+ const account=LLStore.readAccount();
+ $('access').innerHTML=`<div class="access-card"><div class="brand">${brand()}</div><span class="kicker">Recuperação</span><h1 style="margin-top:9px">Seus dados não estão aqui.</h1><p class="subtitle">A senha confere, mas os registros de ${esc(account?.username||'sua conta')} não foram encontrados neste aparelho.</p><div id="accessError" class="error" role="alert" hidden></div><div class="learn-block"><h3>O que aconteceu</h3><p>O navegador ou o sistema pode ter liberado espaço apagando os dados deste app. Nada foi enviado para um servidor, então a única cópia é o backup que você guardou.</p><h3>Nada foi sobrescrito</h3><p>Não criamos um espaço vazio no lugar dos seus dados. Se o backup aparecer, ele entra por cima de nada.</p></div><div class="stack">${btn(icon('upload')+' Restaurar um backup','import','','primary full')}</div>${optionalDetails(`<p>Sem backup, os registros anteriores não têm como voltar. Você pode recomeçar do zero neste aparelho: o cadastro atual será removido e um novo acesso será criado.</p>${btn('Recomeçar do zero neste aparelho','discard-orphan','','action-muted text-danger')}`,'Não tenho backup')}</div>`;
+}
+function openDiscardOrphan(){
+ modal('Recomeçar neste aparelho',`<form id="discardForm"><p class="form-note">Isto remove o cadastro atual deste aparelho para que você crie um acesso novo. Os registros anteriores já não estão aqui e não serão recuperados por esta ação.</p><label class="check-normal"><input type="checkbox" required><span>Entendi que não há backup para restaurar.</span></label><div class="dialog-foot"><button type="submit" class="danger-button full">Remover cadastro e recomeçar</button></div></form>`);
+ bindForm('discardForm',async()=>{
+  busy=true;
+  try{await LLStore.discardOrphanAccount(orphanPassword);orphanPassword='';busy=false;closeModal();renderAccess();toast('Cadastro removido. Crie seu novo acesso.');}
+  catch(e){busy=false;throw e;}
+ });
+}
+async function showUnlocked(s,migrating=true){
+ state=s;page='overview';monthFilter=LL.planningMonth(s);orphanPassword='';
+ $('access').hidden=true;$('access').innerHTML='';$('shell').hidden=false;render();
+ // Regrava apenas quando a normalização migrou o esquema de verdade. Um login comum
+ // não reescreve o banco: isso mantém intacta uma instalação ainda restaurável.
+ if(migrating&&LLStore.wasMigrated?.()){try{await LLStore.save(state);}catch(e){toast(e.message);}}
+ LLStore.persist?.();
+ if(state.migrationNotes?.length)toast('Confira os dados antigos em Backup antes de fazer alterações.');
+}
 async function lock(){if(busy)return;busy=true;try{await LLStore.lock();busy=false;closeModal();$('view').innerHTML='';$('sidebar').innerHTML='';$('topbar').innerHTML='';$('mobileNav').innerHTML='';allocationDraft=null;renderAccess();}finally{busy=false;}}
 async function handleAction(el){
  const action=el.dataset.action,id=el.dataset.id||'';
@@ -335,6 +361,7 @@ async function handleAction(el){
  case 'backup':openBackup();break;
  case 'export':await exportBackup();break;
  case 'import':$('backupFile').click();break;
+ case 'discard-orphan':openDiscardOrphan();break;
  case 'reset':openReset();break;
  case 'planning-reset':openPlanningReset();break;
  case 'month-rollover':openMonthRollover();break;
@@ -351,8 +378,25 @@ async function handleAction(el){
  case 'update':if(swWaiting){closeModal();swWaiting.postMessage({type:'SKIP_WAITING'});}else toast('Esta é a versão disponível.');break;
  }
 }
+// Um WebView desatualizado faria o app abrir em tela branca sem explicação alguma.
+// minSdk não garante versão de WebView no Android, então a checagem é em tempo de
+// execução e diz o que fazer, em vez de falhar em silêncio.
+function missingCapabilities(){
+ const faltando=[];
+ if(!globalThis.crypto?.subtle)faltando.push('criptografia segura');
+ if(!('indexedDB'in globalThis))faltando.push('armazenamento local');
+ if(typeof structuredClone!=='function')faltando.push('cópia de dados');
+ if(typeof HTMLDialogElement==='undefined'||!HTMLDialogElement.prototype.showModal)faltando.push('janelas do app');
+ return faltando;
+}
+function renderUnsupported(faltando){
+ $('shell').hidden=true;$('access').hidden=false;
+ const nativo=globalThis.LLPlatform?.native;
+ $('access').innerHTML=`<div class="access-card"><div class="brand">${brand()}</div><span class="kicker">Aparelho</span><h1 style="margin-top:9px">Este aparelho ainda não consegue abrir o app.</h1><p class="subtitle">Faltam recursos básicos: ${esc(faltando.join(', '))}.</p><div class="learn-block"><h3>Como resolver</h3><p>${nativo?'Atualize o <b>Android System WebView</b> e o <b>Google Chrome</b> pela Play Store e abra o app de novo.':'Atualize o navegador para a versão mais recente, ou abra o app pelo endereço HTTPS em vez de um arquivo local.'}</p><h3>Seus dados</h3><p>Nada foi alterado. Se você já tinha registros neste aparelho, eles continuam onde estavam.</p></div></div>`;
+}
 async function registerWorker(){
- if(location.protocol==='file:'||document.querySelector('meta[name=ll-preview]')||!('serviceWorker'in navigator))return;
+ // No app nativo os arquivos já vivem no bundle: não há cache a instalar nem a invalidar.
+ if(globalThis.LLPlatform?.bundled||location.protocol==='file:'||document.querySelector('meta[name=ll-preview]')||!('serviceWorker'in navigator))return;
  try{const registration=await navigator.serviceWorker.register(new URL('../sw.js',location.href),{scope:new URL('../',location.href).pathname,updateViaCache:'none'});function found(worker){swWaiting=worker;if(state){if(page==='settings')render();toast('Uma atualização está pronta em Configurações.');}}if(registration.waiting)found(registration.waiting);registration.addEventListener('updatefound',()=>{const w=registration.installing;if(w)w.addEventListener('statechange',()=>{if(w.state==='installed'&&navigator.serviceWorker.controller)found(registration.waiting||w);});});registration.update().catch(()=>{});let reloaded=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(swWaiting&&!reloaded){reloaded=true;location.reload();}});}catch(e){console.warn('Instalação offline indisponível',e.message);}
 }
 document.addEventListener('DOMContentLoaded',()=>{
@@ -365,5 +409,7 @@ document.addEventListener('DOMContentLoaded',()=>{
  window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();installPrompt=e;});
  window.addEventListener('appinstalled',()=>{installPrompt=null;toast('Life Lately instalado.');});
  window.addEventListener('online',()=>{if(state)renderShell();});window.addEventListener('offline',()=>{if(state)renderShell();});
+ const faltando=missingCapabilities();
+ if(faltando.length){renderUnsupported(faltando);return;}
  renderAccess();registerWorker();
 });
