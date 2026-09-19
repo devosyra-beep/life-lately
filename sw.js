@@ -1,8 +1,8 @@
-/* Life Lately v29. Two pages, one origin and one app identity.
+/* Life Lately v30. Two pages, one origin and one app identity.
  * Caches only public files. IndexedDB, localStorage and decrypted app data are untouched.
  * Activation is explicit while tabs are open; do not reload an unsaved app session.
  */
-const CACHE='life-lately-v29-nav-20260919';
+const CACHE='life-lately-v30-nav-20260919';
 const ROOT=new URL('./',self.location.href);
 const ASSETS=[
   "./",
@@ -24,6 +24,7 @@ const ASSETS=[
   "./assets/landing/hero-night.jpg",
   "./assets/landing/landing.css",
   "./assets/landing/landing.js",
+  "./assets/landing/life-lately-sunset.jpg",
   "./assets/landing/night-table-1024.webp",
   "./assets/landing/night-table-480.webp",
   "./assets/landing/night-table.jpg"

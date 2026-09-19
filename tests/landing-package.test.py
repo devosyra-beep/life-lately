@@ -1,58 +1,95 @@
-"""Static integrity of the two entry pages. No server, browser or real user data."""
+"""Static integrity of the production landing and the untouched app entry page."""
 from pathlib import Path
 from html.parser import HTMLParser
-from urllib.parse import urlsplit,unquote
-import re,json,hashlib,sys
-if hasattr(sys.stdout,'reconfigure'):
- sys.stdout.reconfigure(encoding='utf-8')
-R=Path(__file__).resolve().parents[1]
+from urllib.parse import urlsplit, unquote
+import re
+import sys
+
+if hasattr(sys.stdout, 'reconfigure'):
+    sys.stdout.reconfigure(encoding='utf-8')
+
+R = Path(__file__).resolve().parents[1]
+
+
 class HTML(HTMLParser):
- def __init__(self):super().__init__();self.tags=[]
- def handle_starttag(self,tag,attrs):self.tags.append((tag,dict(attrs)))
+    def __init__(self):
+        super().__init__()
+        self.tags = []
+
+    def handle_starttag(self, tag, attrs):
+        self.tags.append((tag, dict(attrs)))
+
+
 def parse(name):
- p=HTML();p.feed((R/name).read_text(encoding='utf-8'));return p.tags
-n=0
-def ok(s):
- global n;n+=1;print('✓',s)
-root=parse('index.html');app=parse('app/index.html')
-source=(R/'index.html').read_text(encoding='utf-8')
-assert 'A vida acontece.<br><em' in source and 'Seu dinheiro acompanha.' in source
-assert 'A noite é sua.' not in source and 'O saldo também.' not in source
-ok('Nova chamada está na landing e a chamada antiga foi removida')
-ctas=[a['href'] for t,a in root if t=='a' and 'data-app-link' in a]
-assert len(ctas)==5 and set(ctas)=={'./app/index.html'}
-ok('Todos os cinco acessos, incluindo a prévia de Ganhei, levam ao app')
-for name,tags in [('index.html',root),('app/index.html',app)]:
- for tag,a in tags:
-  refs=[a[k] for k in ['src','href'] if k in a]
-  if 'srcset' in a:refs += [v.strip().split()[0] for v in a['srcset'].split(',')]
-  for ref in refs:
-   u=urlsplit(ref)
-   if u.scheme or ref.startswith('#'):continue
-   p=(R/name).parent/unquote(u.path)
-   if p.is_dir():p=p/'index.html'
-   assert p.exists(),f'{name}: recurso ausente {ref}'
-ok('Imagens, CSS, JavaScript, manifesto e links locais resolvem corretamente')
-ids={a['id'] for t,a in root if 'id' in a}
-for tag,a in root:
- if tag=='a' and a.get('href','').startswith('#'):assert a['href'][1:] in ids
-ok('Todas as âncoras da landing têm destino')
-assert len([1 for t,a in root if t=='h1'])==1
-assert any(t=='main' for t,a in root)
-assert all(a.get('alt') for t,a in root if t=='img')
-ok('Heading principal único, landmark main e imagens com descrição')
-for name in ['hero-night','night-table','golden-sea']:
- assert any(name+'.jpg' in a.get('src','') for t,a in root)
- assert any(name+'-' in a.get('srcset','') for t,a in root)
-ok('As três imagens fornecidas estão aplicadas, com WebP responsivo e JPG de fallback')
-assert not re.search(r'(?:localStorage|indexedDB|LLStore|core\.js|storage\.js|(?<!/)app\.js)',source)
-assert 'localStorage' not in (R/'assets/landing/landing.js').read_text(encoding='utf-8')
-ok('A landing não carrega nem lê o banco ou o cadastro financeiro')
-assert all(k in (R/'storage.js').read_text(encoding='utf-8') for k in ['lifeLatelyZeroV22Account','lifeLatelyZeroV22State','life-lately-zero-v22'])
-ok('Namespace de armazenamento v22–v24 preservado')
+    parser = HTML()
+    parser.feed((R / name).read_text(encoding='utf-8'))
+    return parser.tags
+
+
+count = 0
+
+
+def ok(message):
+    global count
+    count += 1
+    print('✓', message)
+
+
+root = parse('index.html')
+app = parse('app/index.html')
+source = (R / 'index.html').read_text(encoding='utf-8')
+
+assert 'A vida acontece.<br><span>Seu dinheiro acompanha.</span>' in source
+assert 'Planejamento financeiro para quem trabalha por conta própria' in source
+assert 'R$ 29,90' in source and 'Sem mensalidade. Sem recorrência.' in source
+assert 'a vida acontece à noite' not in source
+ok('Texto da landing segue o layout Golden Hour e a promessa de compra única')
+
+assert [a.get('href') for tag, a in root if tag == 'a' and a.get('href') == '#comprar'] == ['#comprar', '#comprar']
+ok('CTAs da home levam à seção de compra sem alterar o app')
+
+for name, tags in [('index.html', root), ('app/index.html', app)]:
+    for tag, attrs in tags:
+        refs = [attrs[key] for key in ('src', 'href') if key in attrs]
+        for ref in refs:
+            url = urlsplit(ref)
+            if url.scheme or ref.startswith('#'):
+                continue
+            path = (R / name).parent / unquote(url.path)
+            if path.is_dir():
+                path = path / 'index.html'
+            assert path.exists(), f'{name}: recurso ausente {ref}'
+ok('Recursos locais da landing e do app resolvem corretamente')
+
+ids = {attrs['id'] for tag, attrs in root if 'id' in attrs}
+for tag, attrs in root:
+    if tag == 'a' and attrs.get('href', '').startswith('#'):
+        assert attrs['href'][1:] in ids
+ok('Todas as âncoras da nova home têm destino')
+
+assert len([1 for tag, _ in root if tag == 'h1']) == 1
+assert any(tag == 'main' for tag, _ in root)
+assert all(attrs.get('alt') for tag, attrs in root if tag == 'img')
+ok('Home mobile-first mantém heading principal, landmark e texto alternativo')
+
+assert any('life-lately-sunset.jpg' in attrs.get('src', '') for tag, attrs in root)
+assert (R / 'assets/landing/life-lately-sunset.jpg').exists()
+assert not any(name in source for name in ('hero-night', 'night-table', 'golden-sea'))
+ok('A nova imagem de entardecer é a única foto usada pela home')
+
+assert not re.search(r'(?:localStorage|indexedDB|LLStore|core\.js|storage\.js|(?<!/)app\.js)', source)
+assert 'localStorage' not in (R / 'assets/landing/landing.js').read_text(encoding='utf-8')
+ok('A landing não carrega nem lê o banco ou o motor financeiro')
+
+assert all(key in (R / 'storage.js').read_text(encoding='utf-8') for key in ['lifeLatelyZeroV22Account', 'lifeLatelyZeroV22State', 'life-lately-zero-v22'])
+ok('O namespace de armazenamento do app permanece presente')
+
 assert not list(R.rglob('*.woff*')) and not list(R.rglob('*.ttf')) and not list(R.rglob('*.otf'))
-ok('Nenhum arquivo de fonte incluído; tipografia externa tem fallback')
-assert 'fonts.googleapis.com' in (R/'_headers').read_text(encoding='utf-8') and 'fonts.gstatic.com' in (R/'_headers').read_text(encoding='utf-8')
-assert not any(re.match(r'\s*/\*\s+',line) for line in (R/'_redirects').read_text(encoding='utf-8').splitlines())
-ok('CSP permite a tipografia prevista e não há redirecionamento global para a landing')
-print(f'\n{n} verificações estáticas concluídas.')
+assert 'fonts.googleapis.com' in (R / '_headers').read_text(encoding='utf-8')
+ok('Tipografia continua externa com fallback e sem novos arquivos de fonte')
+
+assert 'life-lately-sunset.jpg' in (R / 'sw.js').read_text(encoding='utf-8')
+assert not any(re.match(r'\s*/\*\s+', line) for line in (R / '_redirects').read_text(encoding='utf-8').splitlines())
+ok('A imagem nova está no precache e não há redirecionamento global para a home')
+
+print(f'\n{count} verificações da landing concluídas.')

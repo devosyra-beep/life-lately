@@ -1,8 +1,8 @@
 {
   "product": "Life Lately",
-  "version": "v29",
+  "version": "v30",
   "date": "2026-09-19",
-  "purpose": "Microajuste da hero e navegação progressiva da landing; app preservado",
+  "purpose": "Landing Golden Hour mobile-first; app preservado",
   "entries": {
     "landing": "index.html",
     "app": "app/index.html"
