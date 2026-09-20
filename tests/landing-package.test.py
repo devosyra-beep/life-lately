@@ -45,8 +45,9 @@ assert 'R$ 29,90' in source and 'Sem mensalidade. Sem recorrência.' in source
 assert 'a vida acontece à noite' not in source
 ok('Texto da landing segue o layout Golden Hour e a promessa de compra única')
 
-assert [a.get('href') for tag, a in root if tag == 'a' and a.get('href') == '#comprar'] == ['#comprar', '#comprar']
-ok('CTAs da home levam à seção de compra sem alterar o app')
+assert source.count('href="./app/"') == 4
+assert 'Comprar' not in source
+ok('CTAs da home usam Conhecer e levam à tela de acesso do app')
 
 for name, tags in [('index.html', root), ('app/index.html', app)]:
     for tag, attrs in tags:
@@ -79,7 +80,8 @@ ok('A nova imagem de entardecer é a única foto usada pela home')
 
 assert any('assets/brand/life-lately-logo.png' in attrs.get('src', '') for tag, attrs in root)
 assert (R / 'assets/brand/life-lately-logo.png').exists()
-assert 'brand-logo-frame' in (R / 'app.js').read_text(encoding='utf-8')
+assert 'brand-mark-frame' in (R / 'app.js').read_text(encoding='utf-8')
+assert 'brand-full-frame' in (R / 'app.js').read_text(encoding='utf-8')
 ok('A logo oficial está na landing e no componente de marca do app')
 
 assert not re.search(r'(?:localStorage|indexedDB|LLStore|core\.js|storage\.js|(?<!/)app\.js)', source)

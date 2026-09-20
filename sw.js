@@ -1,8 +1,8 @@
-/* Life Lately v31. Two pages, one origin and one app identity.
+/* Life Lately v32. Two pages, one origin and one app identity.
  * Caches only public files. IndexedDB, localStorage and decrypted app data are untouched.
  * Activation is explicit while tabs are open; do not reload an unsaved app session.
  */
-const CACHE='life-lately-v31-logo-20260919';
+const CACHE='life-lately-v32-navigation-20260919';
 const ROOT=new URL('./',self.location.href);
 const ASSETS=[
   "./",
