@@ -7,7 +7,7 @@ const brand=(kind='full')=>`<span class="ll-brand ll-brand-${kind==='full'?'full
 const btn=(text,action,id='',cls='primary',extra='')=>`<button type="button" class="${cls}" data-action="${action}" ${id?`data-id="${esc(id)}"`:''} ${extra}>${text}</button>`;
 const arrow=()=>`<span class="chev" aria-hidden="true">${icon('chevron')}</span>`;
 const navs=[['overview','home','Início'],['income','income','Ganhos'],['organize','organize','Organizar'],['goals','goals','Metas'],['debts','debts','Compromissos']];
-let state=null,page='overview',busy=false,modalBack=null,opener=null,installPrompt=null,swWaiting=null,monthFilter=LL.today().slice(0,7),toastTimer,hiddenSince=0,orphanPassword='',activeStore=LLStore,accessMode='local',cloudUser=null;
+let state=null,page='overview',busy=false,modalBack=null,opener=null,installPrompt=null,swWaiting=null,monthFilter=LL.today().slice(0,7),toastTimer,hiddenSince=0,orphanPassword='',activeStore=LLStore,accessMode='local',cloudUser=null,cloudEntitlement=null;
 const CLOUD_LOCK_KEY='life-lately-cloud-locked-v1';
 const money=v=>LL.fmt(state||LL.empty(),v),compactMoney=v=>LL.fmt(state||LL.empty(),v,true);
 const currencySymbol=()=>LL.CURRENCIES[state?.preferences.currency||'BRL'][1];
@@ -95,7 +95,7 @@ function renderDebts(){
  const missing=active.reduce((n,d)=>n+LL.cents(LL.debtFunding(state,d).remaining),0)/100;
  return head('Seus compromissos.','',btn(icon('plus'),'new-debt','','secondary compact','aria-label="Criar compromisso"'))+`<div class="balance-strip"><div><span class="label">Falta reservar</span><div class="amount">${money(missing)}</div><span class="fine">${money(s.debts)} ainda a pagar</span></div><span class="badge ${active.length?'rose':'green'}">${active.length?`${active.length} em aberto`:'Em dia'}</span></div><div class="pocket-grid">${active.length?active.map(debtCard).join(''):emptyBox('🌿','Nenhum compromisso em aberto.','Um espaço mais leve por aqui.','new-debt','Adicionar compromisso')}</div>${done.length?`<details class="quiet-details"><summary>Quitados · ${done.length}</summary><div class="pocket-grid">${done.map(debtCard).join('')}</div></details>`:''}`;
 }
-const appVersion=()=>globalThis.LLPlatform?.version||'25';
+const appVersion=()=>globalThis.LLPlatform?.version||'1.2.0';
 const platformLabel=()=>({ios:'iPhone',android:'Android'})[globalThis.LLPlatform?.platform]||'individual';
 function settingsRow(ic,name,value,action){return `<button class="row-card" data-action="${action}"><span class="tile-icon">${icon(ic)}</span><span class="grow"><span class="name">${name}</span><small>${value}</small></span>${arrow()}</button>`;}
 function renderSettings(){
@@ -307,18 +307,79 @@ async function openGuest(){
  await showUnlocked(demo,false,{mode:'guest',store:guestStore});
  toast('Modo conhecer: nada será salvo quando você sair.');
 }
-async function openCloudSession(session){
+function paymentReturn(){try{return new URL(location.href).searchParams.get('payment')||'';}catch{return '';}}
+function clearPaymentReturn(){
+ try{const url=new URL(location.href);if(!url.searchParams.has('payment'))return;url.searchParams.delete('payment');history.replaceState({},'',url.href);}catch{}
+}
+function hasFullAccess(value){return value?.product_code==='life-lately-lifetime'&&value?.status==='active';}
+const pause=milliseconds=>new Promise(resolve=>setTimeout(resolve,milliseconds));
+function renderPaymentAccess(session,message=''){
+ state=null;activeStore=LLStore;accessMode='local';cloudUser=null;cloudEntitlement=null;$('shell').hidden=true;$('access').hidden=false;$('access').classList.add('choice-only');document.title='Life Lately · acesso completo';
+ const email=session?.user?.email||'Conta Google';
+ $('access').innerHTML=`<div class="access-card access-choice payment-choice"><div class="brand">${brand()}</div><div id="accessError" class="error" role="alert" ${message?'':'hidden'}>${message?esc(message):''}</div><div class="payment-summary"><span class="kicker">Seu espaço completo</span><strong>R$ 29,90</strong><small>pagamento único · sem renovação</small><p>Seus planos, cofrinhos e metas salvos na sua conta.</p><p>${esc(email)}</p></div><div class="provider-stack">${btn(icon('wallet')+' Pagar com Pix ou cartão','payment-checkout','','primary full')}${btn(icon('refresh')+' Verificar pagamento','payment-check','','secondary full')}${btn(icon('eye')+' Apenas conhecer','payment-guest','','secondary full')}</div><div class="payment-links">${btn('Minha compra','billing-portal','','link-button')}${btn('Compra e reembolso','billing-info','','link-button')}</div><button type="button" class="link-button payment-signout" data-action="payment-signout">Usar outra conta Google</button><div class="access-footer">${icon('shield')} Você só paga ao confirmar no checkout da AbacatePay.</div></div>`;
+}
+async function startCheckout(session){
  if(!session?.user)throw Error('Sua sessão Google expirou. Entre novamente.');
- busy=true;setCloudLocked(false);
- $('access').hidden=false;$('access').innerHTML=`<div class="access-card access-loading"><div class="brand">${brand()}</div><p class="loading">Sincronizando seu espaço…</p></div>`;
+ busy=true;$('access').hidden=false;$('access').innerHTML=`<div class="access-card access-loading"><div class="brand">${brand()}</div><p class="loading">Preparando o pagamento seguro…</p></div>`;
  try{
+  const result=await globalThis.LLCloud.checkout();
+  if(result.status==='already_active'){busy=false;await openCloudSession(session);return;}
+  const target=new URL(result.checkoutUrl||'');
+  if(target.protocol!=='https:'||target.hostname!=='app.abacatepay.com')throw Error('O endereço seguro do pagamento não foi reconhecido.');
+  location.assign(target.href);
+ }catch(error){busy=false;renderPaymentAccess(session,error.message||'Não foi possível abrir o pagamento.');}
+}
+async function openCloudSession(session,{verifyPayment=false}={}){
+ if(!session?.user)throw Error('Sua sessão Google expirou. Entre novamente.');
+ const returned=paymentReturn();
+ busy=true;setCloudLocked(false);
+ $('access').hidden=false;$('access').innerHTML=`<div class="access-card access-loading"><div class="brand">${brand()}</div><p class="loading">${returned==='complete'?'Confirmando seu pagamento…':'Verificando seu acesso…'}</p></div>`;
+ try{
+  if(verifyPayment||returned)await globalThis.LLCloud.billingStatus();
+  let access=await globalThis.LLCloud.entitlement();
+  if(returned==='complete'&&!hasFullAccess(access)){
+   for(let attempt=0;attempt<6&&!hasFullAccess(access);attempt+=1){await pause(1200);access=await globalThis.LLCloud.entitlement();}
+  }
+  if(!hasFullAccess(access)){
+   busy=false;
+   if(returned==='complete'){
+    clearPaymentReturn();
+    renderPaymentAccess(session,'Ainda não há confirmação do pagamento. Se você já pagou, aguarde e toque em “Verificar pagamento”. Não pague novamente.');
+    return;
+   }
+   clearPaymentReturn();
+   renderPaymentAccess(session,returned?'Você voltou do checkout. Nenhum pagamento foi confirmado até agora. Se já pagou, toque em “Verificar pagamento”.':verifyPayment?'Ainda não há pagamento confirmado para esta conta.':'');
+   return;
+  }
+  cloudEntitlement=access;clearPaymentReturn();
+  $('access').innerHTML=`<div class="access-card access-loading"><div class="brand">${brand()}</div><p class="loading">Sincronizando seu espaço…</p></div>`;
   const store=LLCloud.createStore(session.user),cloudState=await store.load();
   busy=false;await showUnlocked(cloudState,false,{mode:'cloud',store,user:session.user});
  }catch(error){busy=false;renderAccess();throw error;}
 }
 function openCloudAccount(){
  const status=activeStore.status?.()||{},email=cloudUser?.email||'Conta Google',syncText=status.pending?'Há alterações aguardando internet.':navigator.onLine?'Tudo sincronizado.':'Você está offline. A cópia deste aparelho continua disponível.';
- modal('Conta e sincronização',`<div class="account-summary">${providerMark('google')}<div><b>${esc(cloudUser?.user_metadata?.full_name||cloudUser?.user_metadata?.name||state.profile.name||'Life Lately')}</b><small>${esc(email)}</small></div></div><div class="${status.pending?'alert-inline':'success-note'}">${status.pending?'○':'✓'} ${syncText}</div><div class="stack cloud-actions">${status.pending?btn(icon('refresh')+' Sincronizar agora','cloud-sync','','primary full'):''}${btn('Sair da conta Google','cloud-signout','','secondary full')}</div><p class="fine" style="margin-top:16px">Este projeto e suas cotas são separados do Osyra. Nenhum dado é compartilhado entre os aplicativos.</p>`);
+ modal('Conta e sincronização',`<div class="account-summary">${providerMark('google')}<div><b>${esc(cloudUser?.user_metadata?.full_name||cloudUser?.user_metadata?.name||state.profile.name||'Life Lately')}</b><small>${esc(email)}</small></div></div><div class="success-note">✓ ${cloudEntitlement?.provider==='founder'?'Acesso de cortesia · sem cobrança':'Acesso completo · sem renovação'}</div><div class="${status.pending?'alert-inline':'success-note'}">${status.pending?'○':'✓'} ${syncText}</div><div class="stack cloud-actions">${btn(icon('wallet')+' Minha compra','billing-portal','','secondary full')}${status.pending?btn(icon('refresh')+' Sincronizar agora','cloud-sync','','primary full'):''}${btn('Sair da conta Google','cloud-signout','','secondary full')}</div>`);
+}
+function openBillingInfo(){
+ modal('Compra e reembolso',`<div class="learn-block"><h3>Uma compra, sem mensalidade</h3><p>R$ 29,90 em pagamento único. Pix ou cartão de crédito à vista, no checkout da AbacatePay. Entrar com Google não cobra nada.</p><h3>Mudou de ideia?</h3><p>Antes de pagar, basta voltar ou fechar o checkout. Se já pagou, fechar a página não cancela a compra.</p><h3>Reembolso</h3><p>Em Minha compra, você pode solicitar a devolução integral. Nos primeiros 7 dias após a confirmação do pagamento, o pedido é enviado automaticamente. Depois desse prazo, fica para análise manual.</p><p>O prazo de crédito depende do banco e do meio de pagamento. Solicitação enviada não significa valor já devolvido. O acesso pago é encerrado quando o reembolso for confirmado; seus registros não são apagados.</p></div>`);
+}
+let billingOrders=[];
+async function openBillingPortal(){
+ busy=true;modal('Minha compra','<p class="loading" role="status">Consultando sua compra…</p>');
+ try{
+  const result=await LLCloud.billingStatus();billingOrders=result.orders||[];
+  const labels={pending:'Aguardando pagamento',checkout_created:'Aguardando pagamento',paid:'Pagamento confirmado',refunded:'Reembolsado',disputed:'Em contestação',lost:'Pagamento revertido',failed:'Não concluído',canceled:'Cancelado',expired:'Expirado'};
+  const refunds={submitting:'Reembolso em processamento. Atualize para acompanhar.',submitted:'Reembolso enviado. Aguardando confirmação da devolução.',manual_review:'Solicitação registrada para análise manual.',failed:'Solicitação registrada para análise manual.',completed:'Devolução confirmada.'};
+  const items=billingOrders.map(order=>`<article class="purchase-card"><div class="purchase-heading"><b>Life Lately</b><span>R$ ${(order.amount_cents/100).toLocaleString('pt-BR',{minimumFractionDigits:2})}</span></div><p>${esc(labels[order.status]||'Em verificação')}</p><small>Compra ${esc(order.reference)} · ${esc(order.payment_method||'Pix ou cartão')}</small>${order.paid_at?`<small>${esc(new Date(order.paid_at).toLocaleString('pt-BR'))}</small>`:''}${order.refund_status?`<p class="alert-inline" role="status">${esc(refunds[order.refund_status]||'Solicitação registrada.')} Protocolo ${esc(order.reference)}.</p>`:''}${order.can_request_refund?btn('Solicitar reembolso','billing-refund',String(order.id),'secondary full'):''}</article>`).join('');
+  modal('Minha compra',`<p class="form-note">Pagamento único. Nenhuma assinatura ou renovação automática.</p>${items||`<div class="empty"><p>${result.founder?'Seu acesso é de cortesia. Não há cobrança para reembolsar.':'Nenhuma compra registrada nesta conta.'}</p></div>`}<div class="stack cloud-actions">${btn(icon('refresh')+' Atualizar status','billing-portal','','secondary full')}${btn('Compra e reembolso','billing-info','','link-button')}</div>`);
+ }catch(error){modal('Minha compra',`<p class="error" role="alert">${esc(error.message)}</p>${btn('Tentar novamente','billing-portal','','secondary full')}`);}
+ finally{busy=false;}
+}
+function openRefundRequest(id){
+ const order=billingOrders.find(item=>String(item.id)===id);if(!order?.can_request_refund)return;
+ modal('Solicitar reembolso',`<form id="refundForm"><p class="form-note">Devolução integral de R$ ${(order.amount_cents/100).toLocaleString('pt-BR',{minimumFractionDigits:2})}. ${order.automatic_refund?'Seu pedido está no prazo de envio automático de 7 dias.':'Seu pedido será registrado para análise manual.'}</p><p class="form-note">O acesso pago será encerrado após a confirmação do reembolso. Seus registros não serão apagados.</p><div class="field"><label for="refundReason">Quer contar o motivo? (opcional)</label><textarea id="refundReason" name="reason" maxlength="500" rows="3" placeholder="Não inclua dados bancários ou do cartão."></textarea></div><label class="check-normal"><input type="checkbox" required><span>Quero solicitar a devolução integral desta compra.</span></label>${footer('Confirmar solicitação')}</form>`,{back:openBillingPortal});
+ bindForm('refundForm',async form=>{busy=true;try{await LLCloud.requestRefund(order.id,form.elements.reason.value);busy=false;await openBillingPortal();}finally{busy=false;}});
 }
 function openCloudSignOut(){
  modal('Sair da conta Google?',`<form id="cloudSignOutForm"><p class="form-note">A sessão e a cópia offline serão removidas deste aparelho. Seus dados sincronizados continuarão seguros na sua conta.</p><div class="dialog-foot"><button type="submit" class="danger-button full">Sair neste aparelho</button></div></form>`,{back:openCloudAccount});
@@ -326,7 +387,7 @@ function openCloudSignOut(){
 }
 function openGuestInfo(){modal('Modo conhecer',`<div class="learn-block"><h3>Uma demonstração segura</h3><p>Você pode explorar todas as telas sem criar conta. Os dados ficam somente na memória desta visita e desaparecem ao sair.</p><h3>Quer continuar depois?</h3><p>Volte à tela de acesso e entre com Google para sincronizar seu espaço.</p></div>${btn('Voltar à tela de acesso','lock','','primary full')}`);}
 function renderAccess(){
- state=null;activeStore=LLStore;accessMode='local';cloudUser=null;$('shell').hidden=true;$('access').hidden=false;$('access').classList.add('choice-only');document.title='Life Lately · seu espaço';
+ state=null;activeStore=LLStore;accessMode='local';cloudUser=null;cloudEntitlement=null;$('shell').hidden=true;$('access').hidden=false;$('access').classList.add('choice-only');document.title='Life Lately · seu espaço';
  const cloudSession=globalThis.LLCloud?.session?.(),cloudSettings=globalThis.LLCloud?.settings?.()||{},native=!!globalThis.LLPlatform?.native,googleReady=!!cloudSession||(!native&&cloudSettings.googleEnabled);
  const googleExtra=googleReady?'':'disabled aria-disabled="true" title="Configuração final em andamento"';
  $('access').innerHTML=`<div class="access-card access-choice"><div class="brand">${brand()}</div><div id="accessError" class="error" role="alert" hidden></div><div class="provider-stack"><button type="button" class="provider-button google" data-action="google-login" ${googleExtra}>${providerMark('google')}<span>${cloudSession?'Continuar com Google':'Entrar com Google'}</span>${!googleReady?'<small>configuração final</small>':''}</button><button type="button" class="provider-button apple" disabled aria-disabled="true">${providerMark('apple')}<span>Entrar com Apple</span><small>em breve</small></button>${btn(icon('eye')+' Apenas conhecer','guest-login','','secondary full')}</div><div class="access-footer">${icon('shield')} Google sincroniza; “conhecer” não guarda dados.</div></div>`;
@@ -395,6 +456,13 @@ async function handleAction(el){
  case 'backup':openBackup();break;
  case 'google-login':{const session=globalThis.LLCloud?.session?.();if(session)await openCloudSession(session);else await globalThis.LLCloud.signInGoogle();break;}
  case 'guest-login':await openGuest();break;
+ case 'payment-checkout':await startCheckout(globalThis.LLCloud?.session?.());break;
+ case 'payment-check':await openCloudSession(globalThis.LLCloud?.session?.(),{verifyPayment:true});break;
+ case 'billing-portal':await openBillingPortal();break;
+ case 'billing-refund':openRefundRequest(id);break;
+ case 'billing-info':openBillingInfo();break;
+ case 'payment-guest':clearPaymentReturn();await openGuest();break;
+ case 'payment-signout':{const session=globalThis.LLCloud?.session?.();await globalThis.LLCloud.signOut(session?.user?.id);clearPaymentReturn();renderAccess();break;}
  case 'cloud-account':openCloudAccount();break;
  case 'guest-info':openGuestInfo();break;
  case 'cloud-sync':{const synced=await activeStore.sync(state);state=synced.state;render();closeModal();toast(synced.changed?'Sincronização concluída.':'Tudo já estava sincronizado.');break;}
@@ -436,7 +504,7 @@ function renderUnsupported(faltando){
 async function registerWorker(){
  // No app nativo os arquivos já vivem no bundle: não há cache a instalar nem a invalidar.
  if(globalThis.LLPlatform?.bundled||location.protocol==='file:'||document.querySelector('meta[name=ll-preview]')||!('serviceWorker'in navigator))return;
- try{const registration=await navigator.serviceWorker.register(new URL('../sw.js?v=40',location.href),{scope:new URL('../',location.href).pathname,updateViaCache:'none'});function found(worker){swWaiting=worker;if(state){if(page==='settings')render();toast('Uma atualização está pronta em Configurações.');}}if(registration.waiting)found(registration.waiting);registration.addEventListener('updatefound',()=>{const w=registration.installing;if(w)w.addEventListener('statechange',()=>{if(w.state==='installed'&&navigator.serviceWorker.controller)found(registration.waiting||w);});});registration.update().catch(()=>{});let reloaded=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(!state&&!reloaded){reloaded=true;location.reload();}});}catch(e){console.warn('Instalação offline indisponível',e.message);}
+ try{const registration=await navigator.serviceWorker.register(new URL('../sw.js?v=41',location.href),{scope:new URL('../',location.href).pathname,updateViaCache:'none'});function found(worker){swWaiting=worker;if(state){if(page==='settings')render();toast('Uma atualização está pronta em Configurações.');}}if(registration.waiting)found(registration.waiting);registration.addEventListener('updatefound',()=>{const w=registration.installing;if(w)w.addEventListener('statechange',()=>{if(w.state==='installed'&&navigator.serviceWorker.controller)found(registration.waiting||w);});});registration.update().catch(()=>{});let reloaded=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(!state&&!reloaded){reloaded=true;location.reload();}});}catch(e){console.warn('Instalação offline indisponível',e.message);}
 }
 document.addEventListener('DOMContentLoaded',async()=>{
  document.addEventListener('click',async e=>{const el=e.target.closest('[data-action]');if(!el||el.disabled)return;e.preventDefault();if(busy)return;try{await handleAction(el);}catch(err){setError(err);}});

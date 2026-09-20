@@ -1,0 +1,45 @@
+import {createRequire} from 'node:module';
+const require=createRequire(process.env.LL_QA_PACKAGE||new URL('../package.json',import.meta.url));
+const {PGlite}=require('@electric-sql/pglite');
+import {readFileSync,readdirSync} from 'node:fs';
+import assert from 'node:assert/strict';
+const db=new PGlite();
+await db.exec(`create role anon; create role authenticated; create role service_role bypassrls; create schema auth; create table auth.users(id uuid primary key); create function auth.uid() returns uuid language sql as $$select nullif(current_setting('request.jwt.claim.sub',true),'')::uuid$$; grant usage on schema auth to authenticated; grant execute on function auth.uid() to authenticated;`);
+const dir=new URL('../supabase/migrations/',import.meta.url);
+for(const name of readdirSync(dir).filter(n=>n.endsWith('.sql')).sort())await db.exec(readFileSync(new URL(name,dir),'utf8'));
+const ids=['10000000-0000-4000-8000-000000000001','10000000-0000-4000-8000-000000000002','10000000-0000-4000-8000-000000000003'];
+for(const id of ids)await db.query('insert into auth.users values($1)',[id]);
+const rpc=async(name,args)=>{const keys=Object.keys(args);return (await db.query(`select public.${name}(${keys.map((k,i)=>`${k} => $${i+1}`).join(',')}) as value`,Object.values(args))).rows[0].value;};
+let checks=0;const ok=m=>{checks++;console.log('HARNESS PASS',m);};
+async function prepare(user,dev=false){return rpc('billing_prepare_checkout',{p_user_id:user,p_product_code:'life-lately-lifetime',p_amount_cents:2990,p_currency:'BRL',p_dev_mode:dev});}
+async function event(order,name,id,extras={}){return rpc('billing_process_payment_event',{p_provider_event_id:id,p_event_type:name,p_external_id:order.externalId,p_provider_checkout_id:'bill_'+order.id,p_checkout_status:'PAID',p_amount_cents:2990,p_paid_amount_cents:2990,p_payment_method:'PIX',p_receipt_url:null,p_dev_mode:order.devMode,p_payload:{id},...extras});}
+const prod=await prepare(ids[0]);assert.equal((await prepare(ids[0])).busy,true);ok('concurrent checkout request cannot create a second order');
+for(const field of ['p_product_code','p_amount_cents','p_currency','p_dev_mode']){
+ const args={p_user_id:ids[0],p_product_code:'life-lately-lifetime',p_amount_cents:2990,p_currency:'BRL',p_dev_mode:false};args[field]=null;
+ await assert.rejects(()=>rpc('billing_prepare_checkout',args));
+}ok('null product/price/currency/environment rejected');
+assert.equal((await event(prod,'checkout.completed','bad',{p_amount_cents:1})).processed,false);
+assert.equal((await event(prod,'checkout.completed','null',{p_paid_amount_cents:null})).processed,false);
+assert.equal((await event(prod,'checkout.completed','mode',{p_dev_mode:true})).processed,false);ok('wrong amount, null amount and wrong environment never grant access');
+await event(prod,'checkout.completed','paid');assert.equal((await event(prod,'checkout.completed','paid')).duplicate,true);
+assert.equal((await db.query('select status from public.entitlements where user_id=$1',[ids[0]])).rows[0].status,'active');ok('paid live grants access exactly once');
+const sandbox=await prepare(ids[1],true);await event(sandbox,'checkout.completed','sandbox');
+assert.equal((await db.query('select * from public.entitlements where user_id=$1',[ids[1]])).rows.length,0);ok('sandbox payments never grant production access');
+await assert.rejects(()=>rpc('billing_request_refund',{p_user_id:ids[1],p_order_id:prod.id,p_reason:''}));ok('refund ownership enforced');
+const refund=await rpc('billing_request_refund',{p_user_id:ids[0],p_order_id:prod.id,p_reason:'changed mind'});assert.equal(refund.send,true);
+assert.equal((await rpc('billing_request_refund',{p_user_id:ids[0],p_order_id:prod.id,p_reason:''})).send,false);ok('refund within 7 days automatic and repeat request idempotent');
+const later=await prepare(ids[0]);await event(later,'checkout.completed','later');
+await event(prod,'checkout.refunded','refund');assert.equal((await db.query('select status from public.entitlements where user_id=$1',[ids[0]])).rows[0].status,'active');ok('refund of old order does not revoke a later paid order');
+await event(later,'checkout.refunded','refund2');await event(later,'checkout.completed','late_delivery');
+assert.equal((await db.query('select status from public.entitlements where user_id=$1',[ids[0]])).rows[0].status,'canceled');ok('late payment event cannot revive refunded access');
+await db.query("insert into public.entitlements(user_id,product_code,status,provider) values($1,'life-lately-lifetime','active','founder')",[ids[2]]);
+const founder=await prepare(ids[2]);await event(founder,'checkout.completed','founderPaid');await event(founder,'checkout.refunded','founderRefund');
+assert.equal((await db.query('select status,provider from public.entitlements where user_id=$1',[ids[2]])).rows[0].provider,'founder');ok('founder access remains independent of payments');
+const old=await prepare(ids[0]);await event(old,'checkout.completed','old');await db.query("update private.payment_orders set paid_at=now()-interval '8 days' where id=$1",[old.id]);
+assert.equal((await rpc('billing_request_refund',{p_user_id:ids[0],p_order_id:old.id,p_reason:''})).status,'manual_review');ok('refund after 7 days enters manual review');
+await db.exec(`set role authenticated; select set_config('request.jwt.claim.sub','${ids[1]}',false);`);
+await assert.rejects(()=>db.query("insert into public.app_states(user_id,state,schema_version) values($1,'{}',1)",[ids[1]]));
+await assert.rejects(()=>db.query('select * from private.payment_orders'));
+await assert.rejects(()=>db.query('select public.billing_customer_portal($1)',[ids[0]]));ok('unpaid client cannot write cloud state or inspect billing RPCs');
+await db.exec('reset role');
+console.log(`${checks} database HARNESS scenarios passed`);await db.close();

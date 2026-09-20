@@ -1,6 +1,6 @@
 const assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm'),path=require('node:path');
 const source=fs.readFileSync(path.join(__dirname,'../cloud.js'),'utf8');
-let created=null,oauthCall=null,checks=0;
+let created=null,oauthCall=null,functionCall=null,checks=0;
 const client={
  auth:{
   getSession:async()=>({data:{session:null},error:null}),
@@ -8,7 +8,12 @@ const client={
   signInWithOAuth:async options=>{oauthCall=options;return {data:{provider:'google'},error:null};},
   signOut:async()=>({error:null})
  },
- from(){throw Error('Database should not be called by this smoke test.');},
+ from(table){
+  assert.equal(table,'entitlements');
+  const chain={select(){return chain;},eq(){return chain;},maybeSingle:async()=>({data:{product_code:'life-lately-lifetime',status:'active',provider:'founder'},error:null})};
+  return chain;
+ },
+ functions:{invoke:async(name,options)=>{functionCall={name,options};return {data:{status:'checkout_created',checkoutUrl:'https://app.abacatepay.com/pay/bill_test'},error:null};}},
  rpc(){throw Error('RPC should not be called by this smoke test.');}
 };
 const context=vm.createContext({
@@ -42,6 +47,13 @@ function ok(name){checks++;console.log('✓',name);}
  assert.equal(context.LLCloud.displayName({email:'x@example.com',user_metadata:{full_name:'Ana Silva'}}),'Ana Silva');
  assert.throws(()=>context.LLCloud.createStore(null),/Sessão Google inválida/);
  ok('Nome do perfil e sessão inválida têm fallback seguro');
+ const access=await context.LLCloud.entitlement();
+ assert.equal(access.status,'active');assert.equal(access.product_code,'life-lately-lifetime');
+ const checkout=await context.LLCloud.checkout();
+ assert.equal(checkout.checkoutUrl,'https://app.abacatepay.com/pay/bill_test');
+ assert.equal(functionCall.name,'create-abacatepay-checkout');
+ assert.equal(functionCall.options.body.productCode,'life-lately-lifetime');
+ ok('Direito de acesso e checkout usam somente o backend autenticado');
  assert(!/service_role/i.test(source));
  ok('Nenhuma chave privilegiada existe no cliente público');
  console.log(`\n${checks} verificações do cliente Supabase concluídas.`);

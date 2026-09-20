@@ -13,6 +13,7 @@ const CONFIG=Object.freeze({
  googleEnabled:true,
  sessionKey:'life-lately-cloud-session-v1'
 });
+const PRODUCT_CODE='life-lately-lifetime';
 const DB_NAME='life-lately-cloud-cache-v1',DB_VERSION=1,STATE_STORE='states',KEY_STORE='keys';
 let client=null,currentSession=null,authSubscription=null;
 
@@ -23,6 +24,15 @@ function displayName(user){
  return String(meta.full_name||meta.name||user?.email?.split('@')[0]||'Você').trim().slice(0,80)||'Você';
 }
 function requireClient(){if(!client)throw Error('A conexão segura ainda não foi iniciada. Atualize a página e tente de novo.');return client;}
+function entitlementCacheKey(){return currentSession?.user?.id?`life-lately-entitlement-v1:${currentSession.user.id}`:'';}
+function cachedEntitlement(){
+ const key=entitlementCacheKey();if(!key)return null;
+ try{const value=JSON.parse(localStorage.getItem(key)||'null');return value?.status==='active'?value:null;}catch{return null;}
+}
+function cacheEntitlement(value){
+ const key=entitlementCacheKey();if(!key)return;
+ try{if(value?.status==='active')localStorage.setItem(key,JSON.stringify(value));else localStorage.removeItem(key);}catch{}
+}
 function openDb(){return new Promise((resolve,reject)=>{
  if(!('indexedDB'in root))return reject(Error('Armazenamento local indisponível.'));
  const request=indexedDB.open(DB_NAME,DB_VERSION);
@@ -68,7 +78,7 @@ function normalizedState(raw){const state=LL.normalize(raw);LL.validate(state);r
 async function init(){
  if(!ready())return {available:false,session:null};
  if(!client){
-  client=root.supabase.createClient(CONFIG.url,CONFIG.publishableKey,{auth:{storageKey:CONFIG.sessionKey,persistSession:true,autoRefreshToken:true,detectSessionInUrl:true,flowType:'pkce'},global:{headers:{'X-Client-Info':'life-lately-web/1.0.0'}}});
+  client=root.supabase.createClient(CONFIG.url,CONFIG.publishableKey,{auth:{storageKey:CONFIG.sessionKey,persistSession:true,autoRefreshToken:true,detectSessionInUrl:true,flowType:'pkce'},global:{headers:{'X-Client-Info':'life-lately-web/1.2.0'}}});
   const result=await client.auth.getSession();
   if(result.error)throw result.error;
   currentSession=result.data.session;
@@ -84,6 +94,39 @@ async function signInGoogle(){
  if(result.error)throw result.error;
  return result.data;
 }
+async function entitlement(){
+ if(navigator.onLine===false)return cachedEntitlement();
+ const result=await requireClient().from('entitlements').select('product_code,status,provider,current_period_end,updated_at').eq('product_code',PRODUCT_CODE).maybeSingle();
+ if(result.error)throw result.error;
+ cacheEntitlement(result.data||null);
+ return result.data||null;
+}
+async function checkout(){
+ if(navigator.onLine===false)throw Error('Conecte-se à internet para abrir o pagamento.');
+ const result=await requireClient().functions.invoke('create-abacatepay-checkout',{body:{productCode:PRODUCT_CODE}});
+ if(result.error){
+  let message='Não foi possível abrir o pagamento agora.';
+  try{
+   const response=result.response||result.error.context;
+   const payload=await response?.clone?.().json();
+   if(payload?.error)message=String(payload.error);
+  }catch{}
+  throw Error(message);
+ }
+ return result.data||{};
+}
+async function billingRequest(body){
+ if(navigator.onLine===false)throw Error('Conecte-se à internet para consultar sua compra.');
+ const result=await requireClient().functions.invoke('billing-portal',{body});
+ if(result.error){
+  let message='Não foi possível consultar sua compra. Tente novamente.';
+  try{const payload=await (result.response||result.error.context)?.clone?.().json();if(payload?.error)message=String(payload.error);}catch{}
+  throw Error(message);
+ }
+ return result.data||{};
+}
+const billingStatus=()=>billingRequest({action:'status'});
+const requestRefund=(orderId,reason)=>billingRequest({action:'refund',orderId,reason});
 async function ensureProfile(user,name=displayName(user)){
  const now=new Date().toISOString();
  const result=await requireClient().from('profiles').upsert({user_id:user.id,display_name:String(name||displayName(user)).trim().slice(0,80),updated_at:now},{onConflict:'user_id'});
@@ -160,10 +203,11 @@ async function signOut(userId){
  const result=await c.auth.signOut({scope:'local'});
  if(result.error)throw result.error;
  currentSession=null;
+ try{if(userId)localStorage.removeItem(`life-lately-entitlement-v1:${userId}`);}catch{}
  if(userId)await clearCache(userId);
 }
 function session(){return currentSession;}
-function settings(){return {available:ready(),googleEnabled:CONFIG.googleEnabled,projectRef:'kgyztrybhrmsxzwpjntq'};}
+function settings(){return {available:ready(),googleEnabled:CONFIG.googleEnabled,projectRef:'kgyztrybhrmsxzwpjntq',productCode:PRODUCT_CODE};}
 
-root.LLCloud={init,session,settings,signInGoogle,signOut,createStore,ensureProfile,displayName,clearCache};
+root.LLCloud={init,session,settings,signInGoogle,signOut,entitlement,checkout,billingStatus,requestRefund,createStore,ensureProfile,displayName,clearCache};
 })(globalThis);
