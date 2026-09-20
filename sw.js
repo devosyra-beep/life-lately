@@ -1,8 +1,8 @@
-/* Life Lately v35. Two pages, one origin and one app identity.
+/* Life Lately v36. Two pages, one origin and one app identity.
  * Caches only public files. IndexedDB, localStorage and decrypted app data are untouched.
  * Activation is explicit while tabs are open; do not reload an unsaved app session.
  */
-const CACHE='life-lately-v35-palette-20260919';
+const CACHE='life-lately-v36-cloud-access-20260919';
 const ROOT=new URL('./',self.location.href);
 const ASSETS=[
   "./",
@@ -10,6 +10,8 @@ const ASSETS=[
   "./styles.css",
   "./core.js",
   "./storage.js",
+  "./vendor/supabase-2.116.0.js",
+  "./cloud.js",
   "./app.js",
   "./manifest.webmanifest",
   "./icons/icon-192.png",

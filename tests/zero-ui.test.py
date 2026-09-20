@@ -13,6 +13,7 @@ with sync_playwright() as pw:
  browser=pw.chromium.launch(executable_path=os.environ.get('LL_BROWSER_PATH','/usr/bin/chromium'),headless=True,args=['--no-sandbox'])
  page=browser.new_page(viewport={'width':390,'height':844});errors=[];page.on('pageerror',lambda e:errors.append(str(e)))
  page.set_content(html)
+ page.add_script_tag(content="if(!crypto.subtle)Object.defineProperty(crypto,'subtle',{value:{},configurable:true});")
  page.add_script_tag(content=(R/'core.js').read_text())
  page.add_script_tag(content='''window.__testAccount=null;window.__testData=null;window.__erased=0;
  window.LLStore={readAccount:()=>window.__testAccount,create:async(name,password)=>{window.__testAccount={username:name};const s=LL.empty();s.profile.name=name;window.__testData=structuredClone(s);return s;},save:async(s)=>{window.__testData=structuredClone(s);},erase:async()=>{window.__testAccount=null;window.__testData=null;window.__erased++;},lock:async()=>{},isUnlocked:()=>true};''')

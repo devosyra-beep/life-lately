@@ -71,19 +71,31 @@ with sync_playwright() as pw:
     access.on('pageerror', lambda e: errors.append(str(e)))
     access.set_viewport_size({'width': 390, 'height': 844})
     access.set_content(app)
+    access.add_script_tag(content="if(!crypto.subtle)Object.defineProperty(crypto,'subtle',{value:{},configurable:true});")
     for name in ['core.js', 'storage.js', 'app.js']:
         access.add_script_tag(content=(R / name).read_text(encoding='utf-8'))
     access.evaluate('document.dispatchEvent(new Event("DOMContentLoaded"))')
     assert access.locator('.ll-brand-symbol').is_visible()
     assert access.locator('.ll-brand-name').inner_text() == 'life lately.'
     assert access.locator('#accessForm [name=name]').count() == 1
-    assert access.get_by_role('button', name='Criar meu acesso').is_visible()
+    assert access.get_by_role('button', name='Criar acesso local').is_visible()
+    assert access.get_by_role('button', name=re.compile('Entrar com Google')).is_visible()
+    assert access.get_by_role('button', name=re.compile('Entrar com Apple')).is_disabled()
+    assert access.get_by_role('button', name=re.compile('Apenas conhecer')).is_visible()
     access.screenshot(path=str(OUT / 'cadastro-mobile.png'))
     ok('Tela inicial do app recebeu a mesma nova assinatura visual')
 
+    access.get_by_role('button', name=re.compile('Apenas conhecer')).click()
+    access.wait_for_function('accessMode === "guest" && state !== null')
+    access.evaluate('showPage("settings")')
+    assert 'Dados temporários desta visita' in access.locator('#view').inner_text()
+    access.evaluate('lock()')
+    access.wait_for_selector('#accessForm')
+    ok('Apenas conhecer abre uma sessão temporária e retorna sem criar cadastro')
+
     access.evaluate("LLStore.readAccount=()=>({username:'Sara QA'});renderAccess();")
     assert access.locator('#accessForm [name=name]').count() == 0
-    assert access.get_by_role('button', name='Entrar', exact=True).is_visible()
+    assert access.get_by_role('button', name='Entrar neste aparelho', exact=True).is_visible()
     assert 'Olá, Sara.' in access.locator('#access').inner_text()
     access.screenshot(path=str(OUT / 'login-mobile.png'))
     ok('Fluxo de login existente continua intacto após a mudança de marca')

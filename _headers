@@ -3,7 +3,7 @@
   Referrer-Policy: no-referrer
   X-Frame-Options: DENY
   Permissions-Policy: geolocation=(), camera=(), microphone=()
-  Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob:; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; connect-src 'self'; worker-src 'self'; manifest-src 'self'
+  Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob:; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; connect-src 'self' https://kgyztrybhrmsxzwpjntq.supabase.co wss://kgyztrybhrmsxzwpjntq.supabase.co; worker-src 'self'; manifest-src 'self'
 /
   Cache-Control: no-cache
 /index.html
@@ -19,6 +19,10 @@
   Cache-Control: no-cache
 /storage.js
   Cache-Control: no-cache
+/cloud.js
+  Cache-Control: no-cache
+/vendor/supabase-2.116.0.js
+  Cache-Control: public, max-age=31536000, immutable
 /app.js
   Cache-Control: no-cache
 /styles.css

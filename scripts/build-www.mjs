@@ -15,7 +15,7 @@ const root=join(dirname(fileURLToPath(import.meta.url)),'..');
 const out=join(root,'www');
 const pkg=JSON.parse(readFileSync(join(root,'package.json'),'utf8'));
 
-const COPY=['core.js','storage.js','app.js','styles.css'];
+const COPY=['core.js','storage.js','cloud.js','app.js','styles.css'];
 
 rmSync(out,{recursive:true,force:true});
 mkdirSync(out,{recursive:true});
@@ -25,6 +25,7 @@ for(const f of COPY){
  cpSync(join(root,f),join(out,f));
 }
 cpSync(join(root,'icons'),join(out,'icons'),{recursive:true});
+cpSync(join(root,'vendor'),join(out,'vendor'),{recursive:true});
 
 // A casca do app vira a raiz: ../ deixa de fazer sentido dentro do bundle.
 let html=readFileSync(join(root,'app','index.html'),'utf8');

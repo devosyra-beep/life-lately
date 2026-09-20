@@ -25,6 +25,7 @@ try:
    html=re.sub(r'<link[^>]+>','',html)
    html=html.replace('</head>','<meta name="ll-preview" content="true"><style>'+(ROOT/'styles.css').read_text()+'</style></head>')
    p.set_content(html)
+   p.add_script_tag(content="if(!crypto.subtle)Object.defineProperty(crypto,'subtle',{value:{},configurable:true});")
    for asset in ['core.js','storage.js']:p.add_script_tag(content=(ROOT/asset).read_text())
    p.add_script_tag(content="""window.QAAccount=null;window.QASaved=null;window.QAOpen=false;
     window.LLStore={...LLStore,readAccount:()=>QAAccount,keys:LLStore.keys,

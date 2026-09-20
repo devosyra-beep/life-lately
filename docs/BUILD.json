@@ -1,8 +1,8 @@
 {
   "product": "Life Lately",
-  "version": "v35",
+  "version": "v36",
   "date": "2026-09-19",
-  "purpose": "Paleta Strategic Finance em todo o app e Dívidas renomeado para Compromissos",
+  "purpose": "Backend Supabase isolado, sincronização por usuário e novos modos de acesso",
   "entries": {
     "landing": "index.html",
     "app": "app/index.html"
@@ -22,12 +22,22 @@
     "account": "lifeLatelyZeroV22Account",
     "fallback": "lifeLatelyZeroV22State",
     "indexedDB": "life-lately-zero-v22",
+    "cloudSession": "life-lately-cloud-session-v1",
+    "cloudCache": "life-lately-cloud-cache-v1",
     "resetAdded": false
   },
+  "backend": {
+    "provider": "Supabase",
+    "projectRef": "kgyztrybhrmsxzwpjntq",
+    "organization": "LIFE LATELY",
+    "isolatedFromOsyra": true,
+    "googleOAuthReady": false,
+    "appleOAuthEnabled": false
+  },
   "tests": {
-    "nodeChecks": 121,
-    "pythonStaticChecks": 14,
-    "browserUIGroups": 4,
+    "nodeChecks": 125,
+    "pythonStaticChecks": 15,
+    "browserUIGroups": 55,
     "browserRendering": "Codex browser em 390px e 1440px",
     "realHTTPNavigation": "servidor local: landing -> /app/ validado",
     "actualPWAInstallation": false,

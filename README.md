@@ -1,4 +1,4 @@
-# Life Lately · versão 25
+# Life Lately · versão 36
 
 ## Uma entrada para o site, outra para o aplicativo
 
@@ -6,7 +6,7 @@
 - `app/index.html` é a tela de cadastro/login do app existente.
 - Todos os botões **Acessar o app** apontam para `app/index.html`.
 - No site publicado, `/app/` também abre o aplicativo. `/login` é um alias.
-- `core.js`, `storage.js` e `styles.css` do aplicativo são idênticos aos da v24.
+- `core.js` mantém o motor financeiro; `storage.js` preserva o modo local e `cloud.js` integra o backend dedicado do Life Lately.
 
 A chamada principal agora é **A vida acontece. Seu dinheiro acompanha.**
 
@@ -40,7 +40,9 @@ IndexedDB:   life-lately-zero-v22
 
 A landing não carrega o motor financeiro nem lê o cadastro. Os valores e o nome na maquete do site são uma **ilustração estática**, não dados cadastrados ou dados reais extraídos do navegador.
 
-A conta continua local, como na v24: no aparelho/navegador em que já existe um cadastro, o app pede aquela senha; em uma instalação sem cadastro, abre o primeiro acesso. A landing não adiciona um servidor de usuários ou sincronização entre aparelhos.
+O acesso local existente continua disponível e não é migrado ou apagado automaticamente. O novo acesso Google usa um projeto Supabase exclusivo do Life Lately e sincroniza o estado do usuário entre aparelhos; o modo **Apenas conhecer** é temporário e não grava dados. O botão Apple está preparado visualmente, mas permanece desativado até a configuração do provedor.
+
+O backend fica em `supabase/`: as migrations criam perfis, estados sincronizados e a base de autorização para futuros pagamentos. Todas as tabelas públicas usam RLS por proprietário e as tabelas privadas de cobrança não aceitam acesso direto do navegador. Nenhuma chave administrativa é incluída no frontend.
 
 ## Imagens e identidade
 
@@ -56,13 +58,15 @@ O símbolo do app foi mantido nos ícones de instalação. O favicon original da
 index.html                  Landing pronta para publicação
 assets/landing/              CSS/JS da landing, fotos e variantes
 app/index.html              Tela existente de acesso ao aplicativo
-core.js / storage.js        Motor e armazenamento preservados
+core.js / storage.js        Motor e armazenamento local preservados
+cloud.js / vendor/          Autenticação e sincronização Supabase
 app.js / styles.css         Interface do aplicativo
 manifest.webmanifest        Mesmo PWA, com início em /app/
 sw.js                       Cache com páginas distintas
 _headers / _redirects       Regras para Netlify
 source/landing/             TSX e CSS de referência do projeto enviado
 tests/                      Testes e fixtures isolados da produção
+supabase/                   Configuração e migrations do backend dedicado
 docs/                       Integração e relatório desta versão
 ```
 

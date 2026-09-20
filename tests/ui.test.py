@@ -15,6 +15,7 @@ with sync_playwright() as pw:
  ctx=browser.new_context(viewport={'width':390,'height':844},is_mobile=True,has_touch=True)
  p=ctx.new_page();errors=[];p.on('pageerror',lambda e:errors.append(str(e)))
  p.set_content(html)
+ p.add_script_tag(content="if(!crypto.subtle)Object.defineProperty(crypto,'subtle',{value:{},configurable:true});")
  for name in ['core.js','storage.js']:p.add_script_tag(content=(R/name).read_text())
  p.add_script_tag(content='window.QAFailSave=false;window.LLStore={...LLStore,save:async s=>{if(QAFailSave)throw Error("Falha simulada de gravação");window.QAState=structuredClone(s);},isUnlocked:()=>true};')
  p.add_script_tag(content=(R/'app.js').read_text());p.evaluate('document.dispatchEvent(new Event("DOMContentLoaded"))')

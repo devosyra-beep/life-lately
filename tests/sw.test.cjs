@@ -1,4 +1,4 @@
-/* v35 service-worker unit tests: an in-memory Cache adapter, no real installation. */
+/* v36 service-worker unit tests: an in-memory Cache adapter, no real installation. */
 const assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm'),path=require('node:path');
 const dir=path.join(__dirname,'..'),base='https://example.test/',handlers={},deleted=[];
 let skipped=0,claimed=0,calls=0,installed=[],offline=false,count=0;
@@ -6,7 +6,7 @@ const url=x=>new URL(typeof x==='string'?x:x.url,base).href;
 const stored=new Map();
 function response(k){const pathname=new URL(k).pathname;return new Response(['/', '/index.html'].includes(pathname)?'LANDING':pathname==='/app/'?'LOGIN':'ASSET '+k,{headers:{'Content-Type':'text/html'}});}
 const cache={addAll:async a=>{installed=[...a];for(const x of a)stored.set(url(x),response(url(x)));},match:async k=>stored.get(url(k))?.clone(),put:async(k,r)=>stored.set(url(k),r.clone())};
-const current='life-lately-v35-palette-20260919';
+const current='life-lately-v36-cloud-access-20260919';
 const caches={open:async()=>cache,keys:async()=>['life-lately-v24-cofrinhos-20260919','life-lately-v25-landing-20260919','life-lately-v29-nav-20260919','life-lately-v30-nav-20260919','life-lately-v31-logo-20260919','life-lately-v32-navigation-20260919','life-lately-v33-wordmark-20260919','life-lately-v34-strategic-20260919','unrelated-cache',current],delete:async k=>{deleted.push(k);return true;}};
 const self={location:{origin:'https://example.test',href:base+'sw.js'},addEventListener:(k,f)=>handlers[k]=f,skipWaiting:()=>{skipped++;},clients:{claim:async()=>{claimed++;}}};
 vm.runInNewContext(fs.readFileSync(path.join(dir,'sw.js'),'utf8'),{self,caches,URL,Set,Response,fetch:async r=>{calls++;if(offline)throw Error('Offline simulated');return response(url(r));}});

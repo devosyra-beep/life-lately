@@ -42,6 +42,7 @@ css = (R / 'assets/landing/landing.css').read_text(encoding='utf-8')
 app_js = (R / 'app.js').read_text(encoding='utf-8')
 app_css = (R / 'styles.css').read_text(encoding='utf-8')
 sw = (R / 'sw.js').read_text(encoding='utf-8')
+cloud_js = (R / 'cloud.js').read_text(encoding='utf-8')
 
 assert 'Independência<br>no trabalho.<br><span>Clareza no' in source
 assert 'Inteligência financeira para autônomos' in source
@@ -107,6 +108,13 @@ assert 'Strategic Finance palette across access and app surfaces' in app_css
 assert '<meta name="theme-color" content="#61765f">' in (R / 'app/index.html').read_text(encoding='utf-8')
 ok('Login e app compartilham a paleta creme, grafite, sálvia e mauve da landing')
 
+assert 'Entrar com Google' in app_js and 'Entrar com Apple' in app_js and 'Apenas conhecer' in app_js
+assert 'googleEnabled:false' in cloud_js
+assert 'sb_publishable_' in cloud_js and 'service_role' not in cloud_js.lower()
+assert 'kgyztrybhrmsxzwpjntq.supabase.co' in cloud_js
+assert 'vendor/supabase-2.116.0.js' in (R / 'app/index.html').read_text(encoding='utf-8')
+ok('Acesso Google está preparado com chave publicável; Apple permanece desativado e o modo conhecer é local')
+
 assert not re.search(r'(?:localStorage|indexedDB|LLStore|core\.js|storage\.js|(?<!/)app\.js)', source)
 assert 'localStorage' not in (R / 'assets/landing/landing.js').read_text(encoding='utf-8')
 ok('Landing não carrega nem lê o banco ou o motor financeiro')
@@ -120,10 +128,11 @@ assert 'family=Manrope' in source and 'family=Manrope' in (R / 'app/index.html')
 assert 'fonts.googleapis.com' in (R / '_headers').read_text(encoding='utf-8')
 ok('Manrope é aplicada com fallback, sem adicionar binários de fonte ao projeto')
 
-assert 'life-lately-v35-palette-20260919' in sw
+assert 'life-lately-v36-cloud-access-20260919' in sw
 assert 'assets/landing/landing.css' in sw and 'favicon-original.ico' in sw
+assert 'cloud.js' in sw and 'vendor/supabase-2.116.0.js' in sw
 assert not any(photo in sw for photo in ('hero-night', 'night-table', 'golden-sea', 'life-lately-sunset'))
 assert not any(re.match(r'\s*/\*\s+', line) for line in (R / '_redirects').read_text(encoding='utf-8').splitlines())
-ok('Precache v35 contém a nova home e não redireciona rotas desconhecidas')
+ok('Precache v36 contém a nova home, cliente de nuvem e não redireciona rotas desconhecidas')
 
 print(f'\n{count} verificações da landing concluídas.')
