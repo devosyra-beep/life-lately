@@ -1,8 +1,8 @@
-/* Life Lately v41. Two pages, one origin and one app identity.
+/* Life Lately v42. Two pages, one origin and one app identity.
  * Caches only public files. IndexedDB, localStorage and decrypted app data are untouched.
  * Mutable files are network-first so an old cache cannot hide a published update.
  */
-const CACHE='life-lately-v41-network-first-20260920';
+const CACHE='life-lately-v42-network-first-20260920';
 const ROOT=new URL('./',self.location.href);
 const ASSETS=[
   "./",

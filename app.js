@@ -49,7 +49,8 @@ function renderShell(){
  const connection=accessMode==='cloud'?`<span class="fine sync-state"><i class="offline-dot ${navigator.onLine?'online':''}"></i> ${navigator.onLine?'Nuvem':'Offline'}</span>`:accessMode==='guest'?'<span class="fine">Modo conhecer</span>':!navigator.onLine?'<span class="fine"><i class="offline-dot"></i> Offline</span>':'';
  $('topbar').innerHTML=`<button type="button" class="brand" data-action="nav" data-id="overview" aria-label="Life Lately, início">${brand('compact')}</button><span class="desktop-subtitle">Um espaço para cuidar do seu dinheiro.</span><div class="flex">${connection}${btn(esc((state.profile.name||'S').slice(0,1).toUpperCase()),'nav','settings','avatar','aria-label="Abrir configurações"')}</div>`;
 }
-function render(){if(!state)return;renderShell();const screens={overview:renderOverview,income:renderIncome,organize:renderOrganize,goals:renderGoals,debts:renderDebts,settings:renderSettings};$('view').innerHTML=(screens[page]||renderOverview)();document.title=`${({overview:'Início',income:'Ganhos',organize:'Organizar',goals:'Metas',debts:'Compromissos',settings:'Configurações'})[page]} · Life Lately`;}
+function purchaseBanner(){return accessMode==='guest'?`<aside class="purchase-banner" aria-label="Acesso completo"><div><strong>Gostou do seu espaço?</strong><small>R$ 29,90 · pagamento único</small></div>${btn('Quero meu acesso completo','purchase-offer','','primary')}</aside>`:'';}
+function render(){if(!state)return;renderShell();const screens={overview:renderOverview,income:renderIncome,organize:renderOrganize,goals:renderGoals,debts:renderDebts,settings:renderSettings};$('view').innerHTML=purchaseBanner()+(screens[page]||renderOverview)();document.title=`${({overview:'Início',income:'Ganhos',organize:'Organizar',goals:'Metas',debts:'Compromissos',settings:'Configurações'})[page]} · Life Lately`;}
 function sortedPockets(){return LL.cats(state).sort((a,b)=>{if(a.role==='free')return 1;if(b.role==='free')return -1;const ta=LL.target(state,a),tb=LL.target(state,b);if(ta.done!==tb.done)return ta.done?1:-1;return (ta.date||'9999').localeCompare(tb.date||'9999');});}
 function pocketCard(c,{asGoal=false,mini=false}={}){
  const t=LL.target(state,c),p=LL.allocation(state,100),share=(p.shares[c.id]||0)/100;
@@ -95,11 +96,11 @@ function renderDebts(){
  const missing=active.reduce((n,d)=>n+LL.cents(LL.debtFunding(state,d).remaining),0)/100;
  return head('Seus compromissos.','',btn(icon('plus'),'new-debt','','secondary compact','aria-label="Criar compromisso"'))+`<div class="balance-strip"><div><span class="label">Falta reservar</span><div class="amount">${money(missing)}</div><span class="fine">${money(s.debts)} ainda a pagar</span></div><span class="badge ${active.length?'rose':'green'}">${active.length?`${active.length} em aberto`:'Em dia'}</span></div><div class="pocket-grid">${active.length?active.map(debtCard).join(''):emptyBox('🌿','Nenhum compromisso em aberto.','Um espaço mais leve por aqui.','new-debt','Adicionar compromisso')}</div>${done.length?`<details class="quiet-details"><summary>Quitados · ${done.length}</summary><div class="pocket-grid">${done.map(debtCard).join('')}</div></details>`:''}`;
 }
-const appVersion=()=>globalThis.LLPlatform?.version||'1.2.0';
+const appVersion=()=>globalThis.LLPlatform?.version||'1.2.1';
 const platformLabel=()=>({ios:'iPhone',android:'Android'})[globalThis.LLPlatform?.platform]||'individual';
 function settingsRow(ic,name,value,action){return `<button class="row-card" data-action="${action}"><span class="tile-icon">${icon(ic)}</span><span class="grow"><span class="name">${name}</span><small>${value}</small></span>${arrow()}</button>`;}
 function renderSettings(){
- const dataRow=accessMode==='cloud'?settingsRow('shield','Conta e sincronização',esc(cloudUser?.email||'Conta Google'),'cloud-account'):accessMode==='guest'?settingsRow('eye','Modo conhecer','Dados temporários desta visita','guest-info'):settingsRow('shield','Backup e seus dados','Guardar uma cópia · restaurar','backup');
+ const dataRow=accessMode==='cloud'?settingsRow('shield','Conta e sincronização',esc(cloudUser?.email||'Conta Google'),'cloud-account'):accessMode==='guest'?settingsRow('wallet','Comprar agora','Acesso completo · R$ 29,90 uma única vez','purchase-offer')+settingsRow('eye','Modo conhecer','Dados temporários desta visita','guest-info'):settingsRow('shield','Backup e seus dados','Guardar uma cópia · restaurar','backup');
  const lockValue=accessMode==='cloud'?'Voltar para a tela de acesso':accessMode==='guest'?'Encerrar esta demonstração':'Pedir minha senha novamente';
  const note=accessMode==='cloud'?'Seus registros são sincronizados com sua conta e mantêm uma cópia criptografada neste aparelho.':accessMode==='guest'?'Nada deste modo é enviado ou guardado quando você sair.':'Seus registros ficam neste navegador, protegidos pela sua senha.';
  return head('Seu espaço.','Configurações')+`<div class="settings-list">${settingsRow('spark','Seu nome',esc(state.profile.name||'Como quer ser chamada?'),'profile')}${settingsRow('coins','Moeda',`${LL.CURRENCIES[state.preferences.currency][1]} · ${LL.CURRENCIES[state.preferences.currency][0]}`,'currency')}${settingsRow('calendar','Virar o mês',monthText(LL.planningMonth(state))+' · saldos preservados','month-rollover')}${settingsRow('refresh','Recomeçar planejamento','Só os planos, não o seu dinheiro','planning-reset')}${dataRow}${globalThis.LLPlatform?.native?'':settingsRow('phone','Instalar no celular','Seu app na tela inicial','install')}${settingsRow('archive','Arquivados','Histórico preservado','archives')}${settingsRow('info','Como funciona','Divisão, cofrinhos e privacidade','help')}${settingsRow('lock','Bloquear agora',lockValue,'lock')}${swWaiting?settingsRow('refresh','Atualização disponível','Seus dados serão preservados','update'):''}</div><p class="settings-note">${icon('shield')} ${note}</p><div class="version-note">Life Lately · versão ${esc(appVersion())} · ${esc(platformLabel())}</div>`;
@@ -312,6 +313,22 @@ function clearPaymentReturn(){
  try{const url=new URL(location.href);if(!url.searchParams.has('payment'))return;url.searchParams.delete('payment');history.replaceState({},'',url.href);}catch{}
 }
 function hasFullAccess(value){return value?.product_code==='life-lately-lifetime'&&value?.status==='active';}
+function openPurchaseOffer(){
+ if(accessMode==='cloud'&&hasFullAccess(cloudEntitlement)){openCloudAccount();return;}
+ const session=globalThis.LLCloud?.session?.(),settings=globalThis.LLCloud?.settings?.()||{};
+ const available=!!session||(!globalThis.LLPlatform?.native&&settings.googleEnabled);
+ modal('Seu acesso completo',`<div class="payment-summary"><span class="kicker">Life Lately</span><strong>R$ 29,90</strong><small>pagamento único · sem renovação</small><p>Seus planos, cofrinhos e metas salvos na sua conta.</p></div><p class="form-note">Você pode comprar agora, sem esperar. Primeiro conferimos sua conta Google; nenhuma cobrança acontece nesta etapa.</p>${accessMode==='guest'?'<p class="form-note">Os registros do modo conhecer são temporários e não serão transferidos para sua conta.</p>':''}<div class="stack">${btn(session?'Continuar para compra':providerMark('google')+'<span>Continuar com Google</span>','purchase-continue','',session?'primary full':'provider-button google',available?'':'disabled aria-disabled="true"')}${btn('Continuar conhecendo','close','','secondary full')}</div>${available?'':'<p class="form-note">A entrada com Google está indisponível neste ambiente.</p>'}`);
+}
+async function continuePurchase(){
+ if(busy)return;
+ if(navigator.onLine===false)throw Error('Conecte-se à internet para continuar com sua compra.');
+ const cloud=globalThis.LLCloud,session=cloud?.session?.();
+ if(!cloud||(!session&&(globalThis.LLPlatform?.native||!cloud.settings?.().googleEnabled)))throw Error('A entrada com Google está indisponível neste ambiente.');
+ setCloudLocked(false);
+ if(session){closeModal();await openCloudSession(session);return;}
+ busy=true;
+ try{await cloud.signInGoogle();}finally{busy=false;}
+}
 const pause=milliseconds=>new Promise(resolve=>setTimeout(resolve,milliseconds));
 function renderPaymentAccess(session,message=''){
  state=null;activeStore=LLStore;accessMode='local';cloudUser=null;cloudEntitlement=null;$('shell').hidden=true;$('access').hidden=false;$('access').classList.add('choice-only');document.title='Life Lately · acesso completo';
@@ -385,7 +402,7 @@ function openCloudSignOut(){
  modal('Sair da conta Google?',`<form id="cloudSignOutForm"><p class="form-note">A sessão e a cópia offline serão removidas deste aparelho. Seus dados sincronizados continuarão seguros na sua conta.</p><div class="dialog-foot"><button type="submit" class="danger-button full">Sair neste aparelho</button></div></form>`,{back:openCloudAccount});
  bindForm('cloudSignOutForm',async()=>{busy=true;try{await globalThis.LLCloud.signOut(cloudUser?.id);setCloudLocked(false);busy=false;closeModal();$('view').innerHTML='';$('sidebar').innerHTML='';$('topbar').innerHTML='';$('mobileNav').innerHTML='';renderAccess();toast('Você saiu da conta Google neste aparelho.');}catch(error){busy=false;throw error;}});
 }
-function openGuestInfo(){modal('Modo conhecer',`<div class="learn-block"><h3>Uma demonstração segura</h3><p>Você pode explorar todas as telas sem criar conta. Os dados ficam somente na memória desta visita e desaparecem ao sair.</p><h3>Quer continuar depois?</h3><p>Volte à tela de acesso e entre com Google para sincronizar seu espaço.</p></div>${btn('Voltar à tela de acesso','lock','','primary full')}`);}
+function openGuestInfo(){modal('Modo conhecer',`<div class="learn-block"><h3>Uma demonstração segura</h3><p>Você pode explorar todas as telas sem criar conta. Os dados ficam somente na memória desta visita e desaparecem ao sair.</p><h3>Quer seu espaço completo?</h3><p>Você pode comprar quando quiser, sem esperar. O acesso custa R$ 29,90, uma única vez.</p></div><div class="stack">${btn('Quero meu acesso completo','purchase-offer','','primary full')}${btn('Voltar à tela de acesso','lock','','secondary full')}</div>`);}
 function renderAccess(){
  state=null;activeStore=LLStore;accessMode='local';cloudUser=null;cloudEntitlement=null;$('shell').hidden=true;$('access').hidden=false;$('access').classList.add('choice-only');document.title='Life Lately · seu espaço';
  const cloudSession=globalThis.LLCloud?.session?.(),cloudSettings=globalThis.LLCloud?.settings?.()||{},native=!!globalThis.LLPlatform?.native,googleReady=!!cloudSession||(!native&&cloudSettings.googleEnabled);
@@ -456,6 +473,8 @@ async function handleAction(el){
  case 'backup':openBackup();break;
  case 'google-login':{const session=globalThis.LLCloud?.session?.();if(session)await openCloudSession(session);else await globalThis.LLCloud.signInGoogle();break;}
  case 'guest-login':await openGuest();break;
+ case 'purchase-offer':openPurchaseOffer();break;
+ case 'purchase-continue':await continuePurchase();break;
  case 'payment-checkout':await startCheckout(globalThis.LLCloud?.session?.());break;
  case 'payment-check':await openCloudSession(globalThis.LLCloud?.session?.(),{verifyPayment:true});break;
  case 'billing-portal':await openBillingPortal();break;
@@ -504,7 +523,7 @@ function renderUnsupported(faltando){
 async function registerWorker(){
  // No app nativo os arquivos já vivem no bundle: não há cache a instalar nem a invalidar.
  if(globalThis.LLPlatform?.bundled||location.protocol==='file:'||document.querySelector('meta[name=ll-preview]')||!('serviceWorker'in navigator))return;
- try{const registration=await navigator.serviceWorker.register(new URL('../sw.js?v=41',location.href),{scope:new URL('../',location.href).pathname,updateViaCache:'none'});function found(worker){swWaiting=worker;if(state){if(page==='settings')render();toast('Uma atualização está pronta em Configurações.');}}if(registration.waiting)found(registration.waiting);registration.addEventListener('updatefound',()=>{const w=registration.installing;if(w)w.addEventListener('statechange',()=>{if(w.state==='installed'&&navigator.serviceWorker.controller)found(registration.waiting||w);});});registration.update().catch(()=>{});let reloaded=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(!state&&!reloaded){reloaded=true;location.reload();}});}catch(e){console.warn('Instalação offline indisponível',e.message);}
+ try{const registration=await navigator.serviceWorker.register(new URL('../sw.js?v=42',location.href),{scope:new URL('../',location.href).pathname,updateViaCache:'none'});function found(worker){swWaiting=worker;if(state){if(page==='settings')render();toast('Uma atualização está pronta em Configurações.');}}if(registration.waiting)found(registration.waiting);registration.addEventListener('updatefound',()=>{const w=registration.installing;if(w)w.addEventListener('statechange',()=>{if(w.state==='installed'&&navigator.serviceWorker.controller)found(registration.waiting||w);});});registration.update().catch(()=>{});let reloaded=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(!state&&!reloaded){reloaded=true;location.reload();}});}catch(e){console.warn('Instalação offline indisponível',e.message);}
 }
 document.addEventListener('DOMContentLoaded',async()=>{
  document.addEventListener('click',async e=>{const el=e.target.closest('[data-action]');if(!el||el.disabled)return;e.preventDefault();if(busy)return;try{await handleAction(el);}catch(err){setError(err);}});

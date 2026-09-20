@@ -78,7 +78,7 @@ function normalizedState(raw){const state=LL.normalize(raw);LL.validate(state);r
 async function init(){
  if(!ready())return {available:false,session:null};
  if(!client){
-  client=root.supabase.createClient(CONFIG.url,CONFIG.publishableKey,{auth:{storageKey:CONFIG.sessionKey,persistSession:true,autoRefreshToken:true,detectSessionInUrl:true,flowType:'pkce'},global:{headers:{'X-Client-Info':'life-lately-web/1.2.0'}}});
+  client=root.supabase.createClient(CONFIG.url,CONFIG.publishableKey,{auth:{storageKey:CONFIG.sessionKey,persistSession:true,autoRefreshToken:true,detectSessionInUrl:true,flowType:'pkce'},global:{headers:{'X-Client-Info':'life-lately-web/1.2.1'}}});
   const result=await client.auth.getSession();
   if(result.error)throw result.error;
   currentSession=result.data.session;

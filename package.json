@@ -1,6 +1,6 @@
 {
   "name": "life-lately",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "private": true,
   "description": "Life Lately — organização financeira com acesso Google, sincronização e modo conhecer.",
   "scripts": {

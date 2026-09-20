@@ -12,6 +12,10 @@
 
 Google autentica, mas não inicia cobrança. Sem acesso ativo, o app apresenta preço e condições. Somente o botão de pagar solicita um checkout ao servidor. Retornar por URL não prova pagamento, nem cancela pagamento já confirmado. O botão de verificar consulta o backend sem criar outra cobrança. A área Minha compra também fica disponível fora do acesso pago, para acompanhar reembolso.
 
+No modo conhecer, “Quero meu acesso completo” aparece no topo de todas as telas desde a primeira visita. Configurações também oferece “Comprar agora”. Ambos abrem o resumo de R$ 29,90 e só seguem ao Google depois da ação explícita. Com sessão existente, a conta é conferida antes de mostrar o checkout; cortesia/compra válida nunca gera nova cobrança. Fechar o resumo preserva a demonstração. Falha de login/offline não apaga seus dados temporários. A interface avisa que a demonstração não é importada para a conta.
+
+Não existe trial de 3 dias nesta versão: modo conhecer é temporário e não tem contagem regressiva. Os novos botões não criam trial nem mudam regras de acesso. Pagamentos continuam protegidos pela configuração sandbox até aprovação e testes do provedor.
+
 O servidor fixa preço/produto e valida identidade, valor e ambiente da resposta. O banco mantém um pedido aberto por conta e reutiliza o checkout, com uma janela de exclusão para criação simultânea. Os eventos são idempotentes e pagamentos tardios não reativam pedidos já reembolsados. Reembolso de um pedido antigo não revoga outra compra válida nem a cortesia.
 
 Pedidos/eventos/reembolsos ficam no schema privado, sem acesso de clientes. As RPCs de cobrança são executáveis apenas por service_role. As funções públicas validam a sessão com auth.getUser; o webhook valida segredo e assinatura HMAC. Escritas financeiras em nuvem requerem acesso ativo por RLS; dados existentes continuam legíveis pelo titular, sem apagamento após reembolso.
