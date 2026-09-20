@@ -181,7 +181,12 @@ Deno.serve(async (req: Request) => {
     );
     if (existing.ok && existing.body?.success && existing.body?.data) {
       providerCheckout = existing.body.data;
-    } else if (existing.status !== 404) {
+    } else if (existing.status !== 404 && !(
+      // API v2 currently returns 400 for a missing externalId, despite the
+      // documented 404. Only this exact negative lookup permits creation.
+      existing.status === 400 && existing.body?.success === false &&
+      existing.body?.error === "Billing not found" && !existing.body?.data
+    )) {
       throw new Error(`provider lookup failed (${existing.status})`);
     }
 
