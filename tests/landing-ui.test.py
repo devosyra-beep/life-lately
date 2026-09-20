@@ -79,6 +79,9 @@ with sync_playwright() as pw:
     access.evaluate('document.dispatchEvent(new Event("DOMContentLoaded"))')
     assert access.locator('.ll-brand-symbol').is_visible()
     assert access.locator('.ll-brand-name').inner_text() == 'life lately.'
+    assert access.locator('.access-choice > .kicker').count() == 0
+    assert access.locator('.access-choice > h1').count() == 0
+    assert access.locator('.access-choice > .subtitle').count() == 0
     assert access.locator('#accessForm').count() == 0
     assert access.locator('.provider-stack button').count() == 3
     google_button = access.get_by_role('button', name=re.compile('Entrar com Google'))

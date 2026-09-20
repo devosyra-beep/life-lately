@@ -111,6 +111,9 @@ ok('Login e app compartilham a paleta creme, grafite, sálvia e mauve da landing
 assert 'Entrar com Google' in app_js and 'Entrar com Apple' in app_js and 'Apenas conhecer' in app_js
 assert '<form id="accessForm">' not in app_js
 assert 'Criar acesso local' not in app_js and 'Entrar neste aparelho' not in app_js
+assert '<span class="kicker">Um espaço só seu</span>' not in app_js
+assert '<h1 style="margin-top:9px">Seu dinheiro.<br>Seus próximos planos.</h1>' not in app_js
+assert '<p class="subtitle">Entre com Google ou conheça o app sem criar conta.</p>' not in app_js
 assert '.provider-button.google{position:relative;grid-template-columns:1fr;text-align:center}' in app_css
 assert 'googleEnabled:true' in cloud_js
 assert 'sb_publishable_' in cloud_js and 'service_role' not in cloud_js.lower()
@@ -131,11 +134,11 @@ assert 'family=Manrope' in source and 'family=Manrope' in (R / 'app/index.html')
 assert 'fonts.googleapis.com' in (R / '_headers').read_text(encoding='utf-8')
 ok('Manrope é aplicada com fallback, sem adicionar binários de fonte ao projeto')
 
-assert 'life-lately-v38-google-label-center-20260920' in sw
+assert 'life-lately-v39-clean-access-20260920' in sw
 assert 'assets/landing/landing.css' in sw and 'favicon-original.ico' in sw
 assert 'cloud.js' in sw and 'vendor/supabase-2.116.0.js' in sw
 assert not any(photo in sw for photo in ('hero-night', 'night-table', 'golden-sea', 'life-lately-sunset'))
 assert not any(re.match(r'\s*/\*\s+', line) for line in (R / '_redirects').read_text(encoding='utf-8').splitlines())
-ok('Precache v38 contém a nova home, cliente de nuvem e não redireciona rotas desconhecidas')
+ok('Precache v39 contém a nova home, cliente de nuvem e não redireciona rotas desconhecidas')
 
 print(f'\n{count} verificações da landing concluídas.')

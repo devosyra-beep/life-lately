@@ -1,8 +1,8 @@
 {
   "product": "Life Lately",
-  "version": "v38",
+  "version": "v39",
   "date": "2026-09-20",
-  "purpose": "Rótulo do acesso Google centralizado no botão",
+  "purpose": "Tela de acesso mais limpa, sem textos introdutórios",
   "entries": {
     "landing": "index.html",
     "app": "app/index.html"

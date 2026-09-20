@@ -1,8 +1,8 @@
-/* Life Lately v38. Two pages, one origin and one app identity.
+/* Life Lately v39. Two pages, one origin and one app identity.
  * Caches only public files. IndexedDB, localStorage and decrypted app data are untouched.
  * Activation is explicit while tabs are open; do not reload an unsaved app session.
  */
-const CACHE='life-lately-v38-google-label-center-20260920';
+const CACHE='life-lately-v39-clean-access-20260920';
 const ROOT=new URL('./',self.location.href);
 const ASSETS=[
   "./",
