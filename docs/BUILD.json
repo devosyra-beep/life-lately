@@ -1,8 +1,8 @@
 {
   "product": "Life Lately",
-  "version": "v33",
+  "version": "v34",
   "date": "2026-09-19",
-  "purpose": "Landing Golden Hour com wordmark textual; app preservado",
+  "purpose": "Landing Strategic Finance e nova identidade Life Lately; lógica do app preservada",
   "entries": {
     "landing": "index.html",
     "app": "app/index.html"
@@ -11,7 +11,7 @@
   "preservedFromV24": {
     "core.js": true,
     "storage.js": true,
-    "styles.css": true
+    "styles.css": false
   },
   "originalImagesPreserved": {
     "hero-night.jpg": true,
@@ -25,11 +25,11 @@
     "resetAdded": false
   },
   "tests": {
-    "nodeChecks": 112,
-    "pythonStaticChecks": 10,
-    "browserUIGroups": 51,
-    "browserRendering": "Chromium, in-memory fixtures",
-    "realHTTPNavigation": "blocked by environment administrator; not bypassed",
+    "nodeChecks": 121,
+    "pythonStaticChecks": 12,
+    "browserUIGroups": 4,
+    "browserRendering": "Codex browser em 390px e 1440px",
+    "realHTTPNavigation": "servidor local: landing -> /app/ validado",
     "actualPWAInstallation": false,
     "remoteFonts": "not loaded in QA; fallback tested",
     "deployedToNetlify": false,

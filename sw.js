@@ -1,8 +1,8 @@
-/* Life Lately v33. Two pages, one origin and one app identity.
+/* Life Lately v34. Two pages, one origin and one app identity.
  * Caches only public files. IndexedDB, localStorage and decrypted app data are untouched.
  * Activation is explicit while tabs are open; do not reload an unsaved app session.
  */
-const CACHE='life-lately-v33-wordmark-20260919';
+const CACHE='life-lately-v34-strategic-20260919';
 const ROOT=new URL('./',self.location.href);
 const ASSETS=[
   "./",
@@ -15,19 +15,9 @@ const ASSETS=[
   "./icons/icon-192.png",
   "./icons/icon-512.png",
   "./404.html",
-  "./assets/landing/golden-sea-1024.webp",
-  "./assets/landing/golden-sea-480.webp",
-  "./assets/landing/golden-sea.jpg",
-  "./assets/landing/hero-night-1408.webp",
-  "./assets/landing/hero-night-480.webp",
-  "./assets/landing/hero-night-960.webp",
-  "./assets/landing/hero-night.jpg",
   "./assets/landing/landing.css",
   "./assets/landing/landing.js",
-  "./assets/landing/life-lately-sunset.jpg",
-  "./assets/landing/night-table-1024.webp",
-  "./assets/landing/night-table-480.webp",
-  "./assets/landing/night-table.jpg"
+  "./assets/landing/favicon-original.ico"
 ];
 const canonical=path=>new URL(path,ROOT).href;
 const STATIC=new Set(ASSETS.map(canonical));
