@@ -78,11 +78,11 @@ assert (R / 'assets/landing/life-lately-sunset.jpg').exists()
 assert not any(name in source for name in ('hero-night', 'night-table', 'golden-sea'))
 ok('A nova imagem de entardecer é a única foto usada pela home')
 
-assert any('assets/brand/life-lately-logo.png' in attrs.get('src', '') for tag, attrs in root)
-assert (R / 'assets/brand/life-lately-logo.png').exists()
-assert 'brand-mark-frame' in (R / 'app.js').read_text(encoding='utf-8')
-assert 'brand-full-frame' in (R / 'app.js').read_text(encoding='utf-8')
-ok('A logo oficial está na landing e no componente de marca do app')
+assert 'class="golden-wordmark">Life Lately</span>' in source
+app_js = (R / 'app.js').read_text(encoding='utf-8')
+assert 'brand-wordmark' in app_js and 'brand-full-wordmark' in app_js
+assert 'assets/brand/life-lately-logo.png' not in source and 'assets/brand/life-lately-logo.png' not in app_js
+ok('A marca usa apenas o wordmark textual na landing e no app')
 
 assert not re.search(r'(?:localStorage|indexedDB|LLStore|core\.js|storage\.js|(?<!/)app\.js)', source)
 assert 'localStorage' not in (R / 'assets/landing/landing.js').read_text(encoding='utf-8')
@@ -96,7 +96,7 @@ assert 'fonts.googleapis.com' in (R / '_headers').read_text(encoding='utf-8')
 ok('Tipografia continua externa com fallback e sem novos arquivos de fonte')
 
 assert 'life-lately-sunset.jpg' in (R / 'sw.js').read_text(encoding='utf-8')
-assert 'assets/brand/life-lately-logo.png' in (R / 'sw.js').read_text(encoding='utf-8')
+assert 'assets/brand/life-lately-logo.png' not in (R / 'sw.js').read_text(encoding='utf-8')
 assert not any(re.match(r'\s*/\*\s+', line) for line in (R / '_redirects').read_text(encoding='utf-8').splitlines())
 ok('A imagem nova está no precache e não há redirecionamento global para a home')
 

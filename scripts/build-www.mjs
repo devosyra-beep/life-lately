@@ -25,7 +25,6 @@ for(const f of COPY){
  cpSync(join(root,f),join(out,f));
 }
 cpSync(join(root,'icons'),join(out,'icons'),{recursive:true});
-cpSync(join(root,'assets','brand'),join(out,'assets','brand'),{recursive:true});
 
 // A casca do app vira a raiz: ../ deixa de fazer sentido dentro do bundle.
 let html=readFileSync(join(root,'app','index.html'),'utf8');
@@ -59,4 +58,4 @@ writeFileSync(join(out,'platform.js'),`/* Gerado por scripts/build-www.mjs — n
 })(globalThis);
 `);
 
-console.log(`www/ montado · versão ${pkg.version} · ${COPY.length+4} arquivos + ícones/marca`);
+console.log(`www/ montado · versão ${pkg.version} · ${COPY.length+3} arquivos + ícones`);

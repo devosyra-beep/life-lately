@@ -27,8 +27,7 @@ h1,h2,h3,strong{font-family:var(--golden-display);font-weight:700;letter-spacing
 .golden-nav{position:sticky;top:0;z-index:20;border-bottom:1px solid var(--golden-border);background:color-mix(in oklab,var(--golden-background) 92%,white);backdrop-filter:blur(16px)}
 .golden-nav-inner{display:flex;align-items:center;justify-content:space-between;gap:20px;width:min(calc(100% - 32px),1152px);height:72px;margin-inline:auto}
 .golden-nav-brand{display:block;flex:none;color:var(--golden-foreground)}
-.golden-mark-frame{position:relative;display:block;width:62px;height:52px;overflow:hidden}
-.golden-mark-frame img{position:absolute;left:0;top:50%;width:160px;max-width:none;height:auto;transform:translateY(-50%)}
+.golden-wordmark{display:block;font-family:var(--golden-display);font-size:21px;font-weight:800;letter-spacing:-.075em;line-height:1;color:var(--golden-foreground)}
 .golden-nav-actions{display:flex;align-items:center;gap:18px}
 .golden-nav-link{font-size:12px;font-weight:700;color:var(--golden-muted);transition:color .2s}
 .golden-nav-link:hover{color:var(--golden-primary)}
@@ -98,8 +97,7 @@ h1,h2,h3,strong{font-family:var(--golden-display);font-weight:700;letter-spacing
   .golden-container{width:92%}
   .golden-hero-inner{padding:28px 40px 48px}
   .golden-nav-inner{width:92%;height:78px}
-  .golden-mark-frame{width:70px;height:58px}
-  .golden-mark-frame img{width:178px}
+  .golden-wordmark{font-size:25px}
   .golden-hero-copy{padding-bottom:34px}
   .golden-lede{font-size:16px}
   .golden-hero-action-row{display:flex;align-items:center;gap:20px}
