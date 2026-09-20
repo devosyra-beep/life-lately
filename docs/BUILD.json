@@ -31,7 +31,7 @@
     "projectRef": "kgyztrybhrmsxzwpjntq",
     "organization": "LIFE LATELY",
     "isolatedFromOsyra": true,
-    "googleOAuthReady": false,
+    "googleOAuthReady": true,
     "appleOAuthEnabled": false
   },
   "tests": {

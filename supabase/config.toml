@@ -340,7 +340,7 @@ email_optional = false
 # Google is enabled in the hosted project only after its OAuth client ID and secret
 # are configured in the Supabase Dashboard. Secrets must never be committed here.
 [auth.external.google]
-enabled = false
+enabled = true
 client_id = "env(SUPABASE_AUTH_EXTERNAL_GOOGLE_CLIENT_ID)"
 secret = "env(SUPABASE_AUTH_EXTERNAL_GOOGLE_SECRET)"
 redirect_uri = ""

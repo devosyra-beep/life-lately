@@ -9,8 +9,8 @@
 const CONFIG=Object.freeze({
  url:'https://kgyztrybhrmsxzwpjntq.supabase.co',
  publishableKey:'sb_publishable_kyMQ8y698ISDPR2Q3o1wRA_TH8bAqUG',
- // Turn this on only after the dedicated Google OAuth client is configured.
- googleEnabled:false,
+ // Dedicated Google OAuth client configured for Life Lately.
+ googleEnabled:true,
  sessionKey:'life-lately-cloud-session-v1'
 });
 const DB_NAME='life-lately-cloud-cache-v1',DB_VERSION=1,STATE_STORE='states',KEY_STORE='keys';
@@ -78,7 +78,7 @@ async function init(){
  return {available:true,session:currentSession};
 }
 async function signInGoogle(){
- if(!CONFIG.googleEnabled)throw Error('A entrada com Google está na última etapa de configuração. Use “Apenas conhecer” por enquanto.');
+ if(!CONFIG.googleEnabled)throw Error('A entrada com Google está temporariamente indisponível. Use “Apenas conhecer” por enquanto.');
  if(navigator.onLine===false)throw Error('Conecte-se à internet para entrar com Google.');
  const result=await requireClient().auth.signInWithOAuth({provider:'google',options:{redirectTo:canonicalRedirect(),queryParams:{prompt:'select_account'}}});
  if(result.error)throw result.error;

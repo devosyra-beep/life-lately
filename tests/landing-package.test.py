@@ -109,11 +109,11 @@ assert '<meta name="theme-color" content="#61765f">' in (R / 'app/index.html').r
 ok('Login e app compartilham a paleta creme, grafite, sálvia e mauve da landing')
 
 assert 'Entrar com Google' in app_js and 'Entrar com Apple' in app_js and 'Apenas conhecer' in app_js
-assert 'googleEnabled:false' in cloud_js
+assert 'googleEnabled:true' in cloud_js
 assert 'sb_publishable_' in cloud_js and 'service_role' not in cloud_js.lower()
 assert 'kgyztrybhrmsxzwpjntq.supabase.co' in cloud_js
 assert 'vendor/supabase-2.116.0.js' in (R / 'app/index.html').read_text(encoding='utf-8')
-ok('Acesso Google está preparado com chave publicável; Apple permanece desativado e o modo conhecer é local')
+ok('Acesso Google está ativo com chave publicável; Apple permanece desativado e o modo conhecer é local')
 
 assert not re.search(r'(?:localStorage|indexedDB|LLStore|core\.js|storage\.js|(?<!/)app\.js)', source)
 assert 'localStorage' not in (R / 'assets/landing/landing.js').read_text(encoding='utf-8')

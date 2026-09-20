@@ -1,11 +1,11 @@
 const assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm'),path=require('node:path');
 const source=fs.readFileSync(path.join(__dirname,'../cloud.js'),'utf8');
-let created=null,checks=0;
+let created=null,oauthCall=null,checks=0;
 const client={
  auth:{
   getSession:async()=>({data:{session:null},error:null}),
   onAuthStateChange:()=>({data:{subscription:{unsubscribe(){}}}}),
-  signInWithOAuth:async()=>({data:null,error:null}),
+  signInWithOAuth:async options=>{oauthCall=options;return {data:{provider:'google'},error:null};},
   signOut:async()=>({error:null})
  },
  from(){throw Error('Database should not be called by this smoke test.');},
@@ -32,9 +32,12 @@ function ok(name){checks++;console.log('✓',name);}
  assert.equal(created.options.auth.storageKey,'life-lately-cloud-session-v1');
  ok('Cliente usa projeto exclusivo, publishable key, sessão própria e PKCE');
  const settings=context.LLCloud.settings();
- assert.equal(settings.googleEnabled,false);assert.equal(settings.projectRef,'kgyztrybhrmsxzwpjntq');
- await assert.rejects(()=>context.LLCloud.signInGoogle(),/última etapa de configuração/);
- ok('Google permanece bloqueado até o OAuth dedicado estar configurado');
+ assert.equal(settings.googleEnabled,true);assert.equal(settings.projectRef,'kgyztrybhrmsxzwpjntq');
+ await context.LLCloud.signInGoogle();
+ assert.equal(oauthCall.provider,'google');
+ assert.equal(oauthCall.options.redirectTo,'https://devosyra-beep.github.io/life-lately/app/');
+ assert.equal(oauthCall.options.queryParams.prompt,'select_account');
+ ok('Google usa o OAuth dedicado e retorna para a rota publicada do app');
  assert.equal(context.LLCloud.displayName({email:'ana@example.com',user_metadata:{}}),'ana');
  assert.equal(context.LLCloud.displayName({email:'x@example.com',user_metadata:{full_name:'Ana Silva'}}),'Ana Silva');
  assert.throws(()=>context.LLCloud.createStore(null),/Sessão Google inválida/);
