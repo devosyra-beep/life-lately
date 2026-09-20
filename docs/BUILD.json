@@ -1,8 +1,8 @@
 {
   "product": "Life Lately",
-  "version": "v37",
-  "date": "2026-09-19",
-  "purpose": "Acesso simplificado com Google, Apple em breve e modo conhecer",
+  "version": "v38",
+  "date": "2026-09-20",
+  "purpose": "Rótulo do acesso Google centralizado no botão",
   "entries": {
     "landing": "index.html",
     "app": "app/index.html"

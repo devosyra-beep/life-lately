@@ -81,7 +81,11 @@ with sync_playwright() as pw:
     assert access.locator('.ll-brand-name').inner_text() == 'life lately.'
     assert access.locator('#accessForm').count() == 0
     assert access.locator('.provider-stack button').count() == 3
-    assert access.get_by_role('button', name=re.compile('Entrar com Google')).is_visible()
+    google_button = access.get_by_role('button', name=re.compile('Entrar com Google'))
+    assert google_button.is_visible()
+    button_box = google_button.bounding_box()
+    label_box = google_button.locator('span').nth(1).bounding_box()
+    assert abs((button_box['x'] + button_box['width'] / 2) - (label_box['x'] + label_box['width'] / 2)) <= 1
     assert access.get_by_role('button', name=re.compile('Entrar com Apple')).is_disabled()
     assert access.get_by_role('button', name=re.compile('Apenas conhecer')).is_visible()
     access.screenshot(path=str(OUT / 'cadastro-mobile.png'))
