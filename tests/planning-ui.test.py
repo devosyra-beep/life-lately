@@ -35,15 +35,12 @@ try:
      lock:async()=>{QAOpen=false;},isUnlocked:()=>QAOpen};""")
    p.add_script_tag(content=(ROOT/'app.js').read_text());p.evaluate('document.dispatchEvent(new Event("DOMContentLoaded"))')
   else:p.goto(f'http://127.0.0.1:{server.server_port}/app/')
-  p.wait_for_selector('#accessForm')
+  p.wait_for_selector('.provider-stack')
   def reload_ui():
    if OFFLINE:p.evaluate('lock()')
    else:p.reload()
 
-  p.locator('#accessForm [name=name]').fill('Teste de planejamento')
-  p.locator('#accessForm [name=password]').fill('Testes!de-planejamento123')
-  p.locator('#accessForm [name=confirm]').fill('Testes!de-planejamento123')
-  p.locator('#accessForm [type=submit]').click();p.wait_for_function('!!state && !busy')
+  p.evaluate('''async()=>{const s=await LLStore.create('Teste de planejamento','Testes!de-planejamento123');await showUnlocked(s,false,{mode:'local',store:LLStore});}''');p.wait_for_function('!!state && !busy')
   def nav(name):p.evaluate('(name)=>showPage(name)',name)
   def close():
    if p.locator('#dialog').evaluate('(el)=>el.open'):p.keyboard.press('Escape')
@@ -94,8 +91,8 @@ try:
   p.locator('#monthFilter').select_option(month);assert 'R$ 100,00' in p.locator('.income-summary').inner_text()
   nav('goals');assert 'Viagem longa' in p.locator('#view').inner_text();nav('organize')
   ok('Virada atualiza Início, Ganhos e mês de referência sem zerar metas/saldos/dívidas')
-  reload_ui();p.wait_for_selector('#accessForm [name=password]');assert p.locator('#accessForm [name=confirm]').count()==0
-  p.locator('#accessForm [name=password]').fill('Testes!de-planejamento123');submit('accessForm');p.wait_for_function('!!state && !busy')
+  reload_ui();p.wait_for_selector('.provider-stack');assert p.locator('#accessForm').count()==0
+  p.evaluate('''async()=>{const s=await LLStore.unlock('Testes!de-planejamento123');await showUnlocked(s,true,{mode:'local',store:LLStore});}''');p.wait_for_function('!!state && !busy')
   assert p.evaluate('state.planning.closures.length')==1;assert p.evaluate('LL.canUndoPlanning(state)')
   nav('organize');p.locator('#view [data-action=month-rollover]').click();assert 'já está aberto' in p.locator('#dialogTitle').inner_text();close()
   ok('Reabertura mantém virada e bloqueia segundo avanço futuro')
@@ -108,7 +105,7 @@ try:
   assert finance()==before;assert p.evaluate('!LL.forecast(state).hasTargets');nav('goals');assert 'Viagem longa' not in p.locator('#view').inner_text()
   nav('debts');assert 'Cartão' in p.locator('#view').inner_text();nav('organize');assert 'Toque para replanejar' in p.locator('#view').inner_text();snap('04-plano-reiniciado.png')
   ok('Reinício exige confirmação e limpa apenas planejamento em todas as telas')
-  reload_ui();p.wait_for_selector('#accessForm [name=password]');p.locator('#accessForm [name=password]').fill('Testes!de-planejamento123');submit('accessForm');p.wait_for_function('!!state && !busy')
+  reload_ui();p.wait_for_selector('.provider-stack');p.evaluate('''async()=>{const s=await LLStore.unlock('Testes!de-planejamento123');await showUnlocked(s,true,{mode:'local',store:LLStore});}''');p.wait_for_function('!!state && !busy')
   assert p.evaluate('!LL.forecast(state).hasTargets && LL.canUndoPlanning(state)')
   nav('organize');p.locator('#view [data-action=planning-undo]').click();submit('planningUndoForm');p.wait_for_function('!document.getElementById("dialog").open');assert p.evaluate('LL.forecast(state).hasTargets')
   ok('Reinício/desfazer continuam corretos após fechar, autenticar e reabrir')

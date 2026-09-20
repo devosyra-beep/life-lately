@@ -109,6 +109,8 @@ assert '<meta name="theme-color" content="#61765f">' in (R / 'app/index.html').r
 ok('Login e app compartilham a paleta creme, grafite, sálvia e mauve da landing')
 
 assert 'Entrar com Google' in app_js and 'Entrar com Apple' in app_js and 'Apenas conhecer' in app_js
+assert '<form id="accessForm">' not in app_js
+assert 'Criar acesso local' not in app_js and 'Entrar neste aparelho' not in app_js
 assert 'googleEnabled:true' in cloud_js
 assert 'sb_publishable_' in cloud_js and 'service_role' not in cloud_js.lower()
 assert 'kgyztrybhrmsxzwpjntq.supabase.co' in cloud_js
@@ -128,11 +130,11 @@ assert 'family=Manrope' in source and 'family=Manrope' in (R / 'app/index.html')
 assert 'fonts.googleapis.com' in (R / '_headers').read_text(encoding='utf-8')
 ok('Manrope é aplicada com fallback, sem adicionar binários de fonte ao projeto')
 
-assert 'life-lately-v36-cloud-access-20260919' in sw
+assert 'life-lately-v37-three-access-options-20260919' in sw
 assert 'assets/landing/landing.css' in sw and 'favicon-original.ico' in sw
 assert 'cloud.js' in sw and 'vendor/supabase-2.116.0.js' in sw
 assert not any(photo in sw for photo in ('hero-night', 'night-table', 'golden-sea', 'life-lately-sunset'))
 assert not any(re.match(r'\s*/\*\s+', line) for line in (R / '_redirects').read_text(encoding='utf-8').splitlines())
-ok('Precache v36 contém a nova home, cliente de nuvem e não redireciona rotas desconhecidas')
+ok('Precache v37 contém a nova home, cliente de nuvem e não redireciona rotas desconhecidas')
 
 print(f'\n{count} verificações da landing concluídas.')

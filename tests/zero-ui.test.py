@@ -18,15 +18,11 @@ with sync_playwright() as pw:
  page.add_script_tag(content='''window.__testAccount=null;window.__testData=null;window.__erased=0;
  window.LLStore={readAccount:()=>window.__testAccount,create:async(name,password)=>{window.__testAccount={username:name};const s=LL.empty();s.profile.name=name;window.__testData=structuredClone(s);return s;},save:async(s)=>{window.__testData=structuredClone(s);},erase:async()=>{window.__testAccount=null;window.__testData=null;window.__erased++;},lock:async()=>{},isUnlocked:()=>true};''')
  page.add_script_tag(content=(R/'app.js').read_text());page.evaluate('document.dispatchEvent(new Event("DOMContentLoaded"))')
- assert page.locator('#accessForm [name=name]').input_value()==''
- assert page.locator('#accessForm [name=password]').input_value()==''
- assert page.locator('#accessForm [name=confirm]').input_value()==''
+ assert page.locator('#accessForm').count()==0
+ assert page.locator('.provider-stack button').count()==3
  page.screenshot(path=str(OUT/'01-cadastro-vazio.png'),full_page=True)
- print('✓ Cadastro sem nome ou senha preenchidos')
- page.locator('#accessForm [name=name]').fill('Teste')
- page.locator('#accessForm [name=password]').fill('password-new')
- page.locator('#accessForm [name=confirm]').fill('password-new')
- page.locator('#accessForm [type=submit]').click();page.wait_for_function('state!==null')
+ print('✓ Acesso mostra somente três opções, sem formulário local')
+ page.evaluate('''async()=>{const s=await LLStore.create('Teste','password-new');await showUnlocked(s,false,{mode:'local',store:LLStore});}''');page.wait_for_function('state!==null')
  assert page.evaluate('state.transactions.length===0 && state.debts.length===0 && state.activity.length===0')
  for screen in ['overview','income','organize','goals','debts','settings']:
   page.evaluate('(s)=>showPage(s)',screen)
@@ -38,19 +34,18 @@ with sync_playwright() as pw:
  page.locator('#resetForm [name=confirm]').fill('ERRADO');page.locator('#resetForm [type=submit]').click()
  page.wait_for_selector('#dialogError:not([hidden])');assert page.evaluate('__erased')==0
  page.locator('#resetForm [name=confirm]').fill('APAGAR');page.locator('#resetForm [type=submit]').click()
- page.wait_for_selector('#accessForm [name=name]')
+ page.wait_for_selector('.provider-stack')
  assert page.evaluate('__erased')==1
  assert page.evaluate('state===null && __testData===null && __testAccount===null')
- assert page.locator('#accessForm [name=name]').input_value()==''
- assert page.locator('#accessForm [name=password]').input_value()==''
- assert page.locator('#accessForm [name=confirm]').input_value()==''
+ assert page.locator('#accessForm').count()==0
+ assert page.locator('.provider-stack button').count()==3
  assert page.locator('#view').inner_html()==''
  assert page.locator('#dialogRoot').inner_html()==''
- print('✓ Reset confirma a exclusão e limpa perfil, formulário e telas da sessão')
+ print('✓ Reset confirma a exclusão e volta às três opções de acesso')
  for width in [320,390,1440]:
   page.set_viewport_size({'width':width,'height':900})
   assert page.evaluate('document.documentElement.scrollWidth<=innerWidth')
- print('✓ Cadastro sem rolagem horizontal no celular e desktop')
+ print('✓ Acesso sem rolagem horizontal no celular e desktop')
  assert not errors,errors
  print('✓ Sem erros de JavaScript nos fluxos testados')
  (OUT/'result.json').write_text(json.dumps({'groups':5,'storage':'UI stub; crypto tested separately','errors':errors},indent=2))

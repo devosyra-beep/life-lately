@@ -34,7 +34,7 @@ try:
      lock:async()=>{QAOpen=false;},isUnlocked:()=>QAOpen};""")
    p.add_script_tag(content=(ROOT/'app.js').read_text());p.evaluate('document.dispatchEvent(new Event("DOMContentLoaded"))')
   else:p.goto(f'http://127.0.0.1:{srv.server_port}/app/')
-  p.wait_for_selector('#accessForm')
+  p.wait_for_selector('.provider-stack')
   def snap(name):p.screenshot(path=str(OUT/name),full_page=False,animations='disabled')
   def nav(name):p.evaluate('(name)=>showPage(name)',name)
   def close():
@@ -43,9 +43,7 @@ try:
    p.locator(f'#{name} [type=submit]').click();p.wait_for_function('!busy')
    err=p.locator('#dialogError')
    assert not (err.count() and err.is_visible()),err.inner_text() if err.count() else ''
-  p.locator('#accessForm [name=name]').fill('Teste local')
-  p.locator('#accessForm [name=password]').fill('QA-v24!teste-reservas')
-  p.locator('#accessForm [name=confirm]').fill('QA-v24!teste-reservas');submit('accessForm')
+  p.evaluate('''async()=>{const s=await LLStore.create('Teste local','QA-v24!teste-reservas');await showUnlocked(s,false,{mode:'local',store:LLStore});}''')
   p.wait_for_function('!!state');assert p.evaluate('LL.summary(state).pockets')==0
   ok('Cadastro real começa sem dinheiro, dívida ou objetivo pré-carregado')
   nav('organize');p.locator('#view [data-action=new-pocket]').first.click()
@@ -89,7 +87,7 @@ try:
   # Local persistence round-trip, not a stub.
   if OFFLINE:p.evaluate('lock()')
   else:p.reload()
-  p.wait_for_selector('#accessForm');p.locator('#accessPassword').fill('QA-v24!teste-reservas');submit('accessForm');p.wait_for_function('!!state')
+  p.wait_for_selector('.provider-stack');p.evaluate('''async()=>{const s=await LLStore.unlock('QA-v24!teste-reservas');await showUnlocked(s,true,{mode:'local',store:LLStore});}''');p.wait_for_function('!!state')
   assert p.evaluate('LL.debtPaid(state.debts[0])')==40;assert p.evaluate('(id)=>LL.cat(state,id).archived',dp)
   ok('Bloqueio e reentrada preservam quitação/saldos'+(' (adaptador de teste)' if OFFLINE else ' (IndexedDB/WebCrypto)'))
   nav('organize');p.locator(f'#view [data-action=pocket][data-id="{rent}"]').click();p.locator('[data-action=pocket-move]').click()
@@ -132,8 +130,8 @@ try:
   p.set_viewport_size({'width':390,'height':844});nav('organize');snap('06-organizar-final.png')
   if not OFFLINE:
    # Offline app shell with real service worker.
-   p.evaluate('navigator.serviceWorker.ready');p.reload();p.wait_for_selector('#accessForm');ctx.set_offline(True);p.reload();p.wait_for_selector('#accessForm')
-   p.locator('#accessPassword').fill('QA-v24!teste-reservas');submit('accessForm');p.wait_for_function('!!state')
+   p.evaluate('navigator.serviceWorker.ready');p.reload();p.wait_for_selector('.provider-stack');ctx.set_offline(True);p.reload();p.wait_for_selector('.provider-stack')
+   p.evaluate('''async()=>{const s=await LLStore.unlock('QA-v24!teste-reservas');await showUnlocked(s,true,{mode:'local',store:LLStore});}''');p.wait_for_function('!!state')
    assert p.evaluate('LL.summary(state).lifetimeIncome')==310
    assert p.evaluate('state.preferences.currency')=='CNY';ctx.set_offline(False)
    ok('Após carregamento online, reabre offline com login e dados persistidos')

@@ -1,8 +1,8 @@
 {
   "product": "Life Lately",
-  "version": "v36",
+  "version": "v37",
   "date": "2026-09-19",
-  "purpose": "Backend Supabase isolado, sincronização por usuário e novos modos de acesso",
+  "purpose": "Acesso simplificado com Google, Apple em breve e modo conhecer",
   "entries": {
     "landing": "index.html",
     "app": "app/index.html"
@@ -37,7 +37,7 @@
   "tests": {
     "nodeChecks": 125,
     "pythonStaticChecks": 15,
-    "browserUIGroups": 55,
+    "browserUIGroups": 64,
     "browserRendering": "Codex browser em 390px e 1440px",
     "realHTTPNavigation": "servidor local: landing -> /app/ validado",
     "actualPWAInstallation": false,

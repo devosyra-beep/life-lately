@@ -72,13 +72,15 @@ with sync_playwright() as pw:
     access.set_viewport_size({'width': 390, 'height': 844})
     access.set_content(app)
     access.add_script_tag(content="if(!crypto.subtle)Object.defineProperty(crypto,'subtle',{value:{},configurable:true});")
-    for name in ['core.js', 'storage.js', 'app.js']:
+    for name in ['core.js', 'storage.js']:
         access.add_script_tag(content=(R / name).read_text(encoding='utf-8'))
+    access.add_script_tag(content="window.LLCloud={init:async()=>({available:true,session:null}),session:()=>null,settings:()=>({googleEnabled:true})};")
+    access.add_script_tag(content=(R / 'app.js').read_text(encoding='utf-8'))
     access.evaluate('document.dispatchEvent(new Event("DOMContentLoaded"))')
     assert access.locator('.ll-brand-symbol').is_visible()
     assert access.locator('.ll-brand-name').inner_text() == 'life lately.'
-    assert access.locator('#accessForm [name=name]').count() == 1
-    assert access.get_by_role('button', name='Criar acesso local').is_visible()
+    assert access.locator('#accessForm').count() == 0
+    assert access.locator('.provider-stack button').count() == 3
     assert access.get_by_role('button', name=re.compile('Entrar com Google')).is_visible()
     assert access.get_by_role('button', name=re.compile('Entrar com Apple')).is_disabled()
     assert access.get_by_role('button', name=re.compile('Apenas conhecer')).is_visible()
@@ -90,15 +92,15 @@ with sync_playwright() as pw:
     access.evaluate('showPage("settings")')
     assert 'Dados temporários desta visita' in access.locator('#view').inner_text()
     access.evaluate('lock()')
-    access.wait_for_selector('#accessForm')
+    access.wait_for_selector('.provider-stack')
     ok('Apenas conhecer abre uma sessão temporária e retorna sem criar cadastro')
 
     access.evaluate("LLStore.readAccount=()=>({username:'Sara QA'});renderAccess();")
-    assert access.locator('#accessForm [name=name]').count() == 0
-    assert access.get_by_role('button', name='Entrar neste aparelho', exact=True).is_visible()
-    assert 'Olá, Sara.' in access.locator('#access').inner_text()
+    assert access.locator('#accessForm').count() == 0
+    assert access.locator('.provider-stack button').count() == 3
+    assert 'Sara QA' not in access.locator('#access').inner_text()
     access.screenshot(path=str(OUT / 'login-mobile.png'))
-    ok('Fluxo de login existente continua intacto após a mudança de marca')
+    ok('A tela mantém somente três opções mesmo quando há cadastro local antigo')
 
     assert not errors, errors
     ok('Nenhum erro JavaScript nas verificações de interface')

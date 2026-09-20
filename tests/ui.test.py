@@ -19,9 +19,9 @@ with sync_playwright() as pw:
  for name in ['core.js','storage.js']:p.add_script_tag(content=(R/name).read_text())
  p.add_script_tag(content='window.QAFailSave=false;window.LLStore={...LLStore,save:async s=>{if(QAFailSave)throw Error("Falha simulada de gravação");window.QAState=structuredClone(s);},isUnlocked:()=>true};')
  p.add_script_tag(content=(R/'app.js').read_text());p.evaluate('document.dispatchEvent(new Event("DOMContentLoaded"))')
- assert p.locator('#accessForm [name=name]').count()==1
- assert p.locator('#accessForm [name=password]').get_attribute('minlength')=='8'
- ok('Tela inicial de cadastro sem conta pronta')
+ assert p.locator('#accessForm').count()==0
+ assert p.locator('.provider-stack button').count()==3
+ ok('Tela de acesso mantém somente Google, Apple e conhecer')
  p.evaluate('''const qa=LL.empty();qa.profile.name='Teste';const qaDate=LL.afterMonths(1);LL.upsertPocket(qa,{label:'Aluguel',targetAmount:400,targetDate:qaDate});LL.upsertPocket(qa,{label:'Luz',targetAmount:30,targetDate:qaDate});LL.upsertDebt(qa,{name:'Dívida',total:40,due:qaDate});LL.income(qa,{value:100,description:'Diária'});showUnlocked(qa,false);''')
  get=lambda expr:p.evaluate(expr)
  close=lambda:p.keyboard.press('Escape')

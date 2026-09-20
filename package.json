@@ -1,8 +1,8 @@
 {
   "name": "life-lately",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "private": true,
-  "description": "Life Lately — organização financeira offline-first com acesso local e sincronização opcional.",
+  "description": "Life Lately — organização financeira com acesso Google, sincronização e modo conhecer.",
   "scripts": {
     "build": "node scripts/build-www.mjs && node scripts/stamp-version.mjs",
     "test": "node scripts/run-tests.mjs",

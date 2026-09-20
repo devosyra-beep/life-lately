@@ -1,9 +1,9 @@
-# Life Lately · versão 36
+# Life Lately · versão 37
 
 ## Uma entrada para o site, outra para o aplicativo
 
 - `index.html` é a landing page.
-- `app/index.html` é a tela de cadastro/login do app existente.
+- `app/index.html` é a tela de acesso do aplicativo.
 - Todos os botões **Acessar o app** apontam para `app/index.html`.
 - No site publicado, `/app/` também abre o aplicativo. `/login` é um alias.
 - `core.js` mantém o motor financeiro; `storage.js` preserva o modo local e `cloud.js` integra o backend dedicado do Life Lately.
@@ -40,7 +40,7 @@ IndexedDB:   life-lately-zero-v22
 
 A landing não carrega o motor financeiro nem lê o cadastro. Os valores e o nome na maquete do site são uma **ilustração estática**, não dados cadastrados ou dados reais extraídos do navegador.
 
-O acesso local existente continua disponível e não é migrado ou apagado automaticamente. O novo acesso Google usa um projeto Supabase exclusivo do Life Lately e sincroniza o estado do usuário entre aparelhos; o modo **Apenas conhecer** é temporário e não grava dados. O botão Apple está preparado visualmente, mas permanece desativado até a configuração do provedor.
+A tela de acesso apresenta somente três opções: Google, Apple (em breve) e **Apenas conhecer**. O Google usa um projeto Supabase exclusivo do Life Lately e sincroniza o estado do usuário entre aparelhos; o modo **Apenas conhecer** é temporário e não grava dados. Cadastros locais antigos não são apagados por esta atualização, mas o formulário local deixou de ser oferecido na tela de entrada.
 
 O backend fica em `supabase/`: as migrations criam perfis, estados sincronizados e a base de autorização para futuros pagamentos. Todas as tabelas públicas usam RLS por proprietário e as tabelas privadas de cobrança não aceitam acesso direto do navegador. Nenhuma chave administrativa é incluída no frontend.
 
