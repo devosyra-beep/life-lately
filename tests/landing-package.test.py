@@ -77,6 +77,11 @@ assert (R / 'assets/landing/life-lately-sunset.jpg').exists()
 assert not any(name in source for name in ('hero-night', 'night-table', 'golden-sea'))
 ok('A nova imagem de entardecer é a única foto usada pela home')
 
+assert any('assets/brand/life-lately-logo.png' in attrs.get('src', '') for tag, attrs in root)
+assert (R / 'assets/brand/life-lately-logo.png').exists()
+assert 'brand-logo-frame' in (R / 'app.js').read_text(encoding='utf-8')
+ok('A logo oficial está na landing e no componente de marca do app')
+
 assert not re.search(r'(?:localStorage|indexedDB|LLStore|core\.js|storage\.js|(?<!/)app\.js)', source)
 assert 'localStorage' not in (R / 'assets/landing/landing.js').read_text(encoding='utf-8')
 ok('A landing não carrega nem lê o banco ou o motor financeiro')
@@ -89,6 +94,7 @@ assert 'fonts.googleapis.com' in (R / '_headers').read_text(encoding='utf-8')
 ok('Tipografia continua externa com fallback e sem novos arquivos de fonte')
 
 assert 'life-lately-sunset.jpg' in (R / 'sw.js').read_text(encoding='utf-8')
+assert 'assets/brand/life-lately-logo.png' in (R / 'sw.js').read_text(encoding='utf-8')
 assert not any(re.match(r'\s*/\*\s+', line) for line in (R / '_redirects').read_text(encoding='utf-8').splitlines())
 ok('A imagem nova está no precache e não há redirecionamento global para a home')
 

@@ -1,8 +1,8 @@
 {
   "product": "Life Lately",
-  "version": "v30",
+  "version": "v31",
   "date": "2026-09-19",
-  "purpose": "Landing Golden Hour mobile-first; app preservado",
+  "purpose": "Landing Golden Hour e logo oficial; app preservado",
   "entries": {
     "landing": "index.html",
     "app": "app/index.html"

@@ -29,7 +29,8 @@ h1,h2,h3,strong{font-family:var(--golden-display);font-weight:700;letter-spacing
 .golden-hero-shade{position:absolute;inset:0;z-index:-1;background:linear-gradient(180deg,oklch(.24 .065 351 / 25%) 0%,oklch(.24 .065 351 / 5%) 42%,oklch(.24 .065 351 / 90%) 100%)}
 .golden-hero-inner{display:flex;flex-direction:column;min-height:94svh;max-width:1280px;margin-inline:auto;padding:24px 20px 32px}
 .golden-header{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:16px}
-.golden-brand{min-width:0;font-family:var(--golden-display);font-size:21px;font-weight:800;line-height:1}
+.golden-brand{display:block;position:relative;width:170px;height:44px;min-width:0;overflow:hidden;padding:0 8px;border-radius:8px;background:rgb(255 250 249 / 78%);backdrop-filter:blur(5px)}
+.golden-brand img{position:absolute;left:8px;top:50%;width:154px;max-width:none;height:auto;transform:translateY(-50%)}
 .golden-button{display:inline-flex;align-items:center;justify-content:center;gap:10px;min-height:48px;padding:13px 22px;border:0;border-radius:999px;background:var(--golden-primary);color:#fff;font-size:14px;font-weight:700;line-height:1.2;box-shadow:0 18px 48px color-mix(in oklab,var(--golden-primary) 28%,transparent);transition:background .2s,transform .2s,box-shadow .2s}
 .golden-button:hover{background:var(--golden-accent);transform:translateY(-2px);box-shadow:0 22px 52px color-mix(in oklab,var(--golden-primary) 38%,transparent)}
 .golden-button-small{min-height:40px;padding:10px 16px;font-size:12px;background:var(--golden-primary)}
@@ -91,7 +92,8 @@ h1,h2,h3,strong{font-family:var(--golden-display);font-weight:700;letter-spacing
 @media (min-width:600px){
   .golden-container{width:92%}
   .golden-hero-inner{padding:28px 40px 48px}
-  .golden-brand{font-size:24px}
+  .golden-brand{width:190px;height:51px;padding-inline:10px}
+  .golden-brand img{left:10px;width:170px}
   .golden-hero-copy{padding-bottom:34px}
   .golden-lede{font-size:16px}
   .golden-hero-action-row{display:flex;align-items:center;gap:20px}
