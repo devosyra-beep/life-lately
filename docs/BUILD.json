@@ -1,8 +1,8 @@
 {
   "product": "Life Lately",
-  "version": "v34",
+  "version": "v35",
   "date": "2026-09-19",
-  "purpose": "Landing Strategic Finance e nova identidade Life Lately; lógica do app preservada",
+  "purpose": "Paleta Strategic Finance em todo o app e Dívidas renomeado para Compromissos",
   "entries": {
     "landing": "index.html",
     "app": "app/index.html"
@@ -26,7 +26,7 @@
   },
   "tests": {
     "nodeChecks": 121,
-    "pythonStaticChecks": 12,
+    "pythonStaticChecks": 14,
     "browserUIGroups": 4,
     "browserRendering": "Codex browser em 390px e 1440px",
     "realHTTPNavigation": "servidor local: landing -> /app/ validado",

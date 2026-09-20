@@ -91,9 +91,21 @@ assert 'brand-wordmark' not in app_js and 'brand-full-wordmark' not in app_js
 assert 'assets/brand/life-lately-logo.png' not in source and 'assets/brand/life-lately-logo.png' not in app_js
 ok('Nova assinatura life lately. aparece na landing e nos pontos de marca do app')
 
-assert all(term in source for term in ('ganhos', 'compromissos', 'cofrinhos', 'metas', 'dívidas', 'renda variável'))
+assert all(term in source for term in ('ganhos', 'compromissos', 'cofrinhos', 'metas', 'despesas', 'renda variável'))
 assert 'guardados no seu próprio navegador' in source
 ok('Texto da proposta descreve apenas recursos e privacidade presentes no app atual')
+
+core_js = (R / 'core.js').read_text(encoding='utf-8')
+assert not re.search(r'd[ií]vidas?', source, re.I)
+assert not re.search(r'd[ií]vidas?', app_js, re.I)
+assert not re.search(r'd[ií]vidas?', core_js, re.I)
+assert "['debts','debts','Compromissos']" in app_js
+ok('Interface, mensagens do motor e landing usam Compromissos sem exibir o termo anterior')
+
+assert '--bg:#f7f4ef' in app_css and '--rose:#61765f' in app_css and '--pink:#e8eee7' in app_css
+assert 'Strategic Finance palette across access and app surfaces' in app_css
+assert '<meta name="theme-color" content="#61765f">' in (R / 'app/index.html').read_text(encoding='utf-8')
+ok('Login e app compartilham a paleta creme, grafite, sálvia e mauve da landing')
 
 assert not re.search(r'(?:localStorage|indexedDB|LLStore|core\.js|storage\.js|(?<!/)app\.js)', source)
 assert 'localStorage' not in (R / 'assets/landing/landing.js').read_text(encoding='utf-8')
@@ -108,10 +120,10 @@ assert 'family=Manrope' in source and 'family=Manrope' in (R / 'app/index.html')
 assert 'fonts.googleapis.com' in (R / '_headers').read_text(encoding='utf-8')
 ok('Manrope é aplicada com fallback, sem adicionar binários de fonte ao projeto')
 
-assert 'life-lately-v34-strategic-20260919' in sw
+assert 'life-lately-v35-palette-20260919' in sw
 assert 'assets/landing/landing.css' in sw and 'favicon-original.ico' in sw
 assert not any(photo in sw for photo in ('hero-night', 'night-table', 'golden-sea', 'life-lately-sunset'))
 assert not any(re.match(r'\s*/\*\s+', line) for line in (R / '_redirects').read_text(encoding='utf-8').splitlines())
-ok('Precache v34 contém a nova home e não redireciona rotas desconhecidas')
+ok('Precache v35 contém a nova home e não redireciona rotas desconhecidas')
 
 print(f'\n{count} verificações da landing concluídas.')

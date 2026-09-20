@@ -67,7 +67,7 @@ function normalize(raw){
  }
  s.debts=(Array.isArray(raw.debts)?raw.debts:[]).filter(Boolean).map(d=>{
   const m=movements(d.movements,['payment','adjustment']);if(!m.length&&positive(d.paid)>0)m.push({id:uid(),type:'payment',amount:Math.min(positive(d.paid),positive(d.initialTotal??d.total)),date:today(),note:'Pagamento anterior'});
-  return {...d,id:String(d.id||uid()),name:String(d.name||'Dívida').slice(0,60),initialTotal:positive(d.initialTotal??d.total),due:validDate(d.due)?d.due:'',movements:m,archived:!!d.archived};
+  return {...d,id:String(d.id||uid()),name:String(d.name||'Compromisso').slice(0,60),initialTotal:positive(d.initialTotal??d.total),due:validDate(d.due)?d.due:'',movements:m,archived:!!d.archived};
  });
  const generic=s.allocationCategories.find(c=>c.role==='debt'&&!c.debtId&&!c.archived);
  for(const d of s.debts){
@@ -223,7 +223,7 @@ function upsertPocket(s,{id='',label,icon='🐷',color='#d5839b',role='custom',t
  const repeat=recurrence===undefined?(c?.recurrence||'once'):recurrence;
  if(!['once','monthly'].includes(repeat))throw Error('Escolha uma repetição válida.');
  if(repeat==='monthly'&&(!targetDate||!positive(targetAmount)))throw Error('Para repetir todo mês, informe o valor e o primeiro vencimento.');
- if(c){if(linkedDebts(s,id).length)throw Error('Edite o valor e o prazo na dívida vinculada.');Object.assign(c,{label:label.slice(0,60),icon,color,role:c.role==='free'?'free':role,targetAmount:positive(targetAmount),targetDate});}
+ if(c){if(linkedDebts(s,id).length)throw Error('Edite o valor e o prazo no compromisso vinculado.');Object.assign(c,{label:label.slice(0,60),icon,color,role:c.role==='free'?'free':role,targetAmount:positive(targetAmount),targetDate});}
  else {c={id:'pocket-'+uid(),label:label.slice(0,60),icon,color,role,targetAmount:positive(targetAmount),targetDate,movements:[],archived:false,goalId:role==='goal'?'goal-'+uid():''};s.allocationCategories.push(c);s.allocation[c.id]=0;}
  if(c.cycleSpentBaselineCents===undefined)c.cycleSpentBaselineCents=spentCents(c);
  if(repeat==='monthly'&&(oldRepeat!=='monthly'||oldDate?.slice(0,7)!==targetDate.slice(0,7)))c.cycleSpentBaselineCents=spentCents(c);
@@ -232,12 +232,12 @@ function upsertPocket(s,{id='',label,icon='🐷',color='#d5839b',role='custom',t
  if(c.targetAmount>0)s.preferences.autoConfigured=true;
  recordActivity(s,'pocket',c.id,`Plano · ${label}`,before,c.targetAmount,targetDate,'configure');return c;
 }
-function archivePocket(s,id){const c=cat(s,id);if(!c)return;if(c.role==='free')throw Error('O cofrinho Livre recebe o restante da divisão.');if(linkedDebts(s,id).some(d=>debtBalance(s,d)>0))throw Error('Há uma dívida ativa ligada a este cofrinho.');if(pocketCents(s,id)!==0)throw Error('Transfira ou ajuste o saldo antes de arquivar.');c.archived=true;retireAllocation(s,id);if(c.goalId==='financial-main'){s.goals.financial.target=0;s.goals.financial.name='';s.goals.financial.targetDate='';}recordActivity(s,'pocket',id,`Cofrinho arquivado · ${c.label}`,0,0,'Histórico preservado','archive');}
+function archivePocket(s,id){const c=cat(s,id);if(!c)return;if(c.role==='free')throw Error('O cofrinho Livre recebe o restante da divisão.');if(linkedDebts(s,id).some(d=>debtBalance(s,d)>0))throw Error('Há um compromisso ativo ligado a este cofrinho.');if(pocketCents(s,id)!==0)throw Error('Transfira ou ajuste o saldo antes de arquivar.');c.archived=true;retireAllocation(s,id);if(c.goalId==='financial-main'){s.goals.financial.target=0;s.goals.financial.name='';s.goals.financial.targetDate='';}recordActivity(s,'pocket',id,`Cofrinho arquivado · ${c.label}`,0,0,'Histórico preservado','archive');}
 function debtPocket(d){return {id:'debt-'+d.id,label:d.name,icon:'💳',color:'#b591a4',role:'debt',goalId:'',debtId:d.id,targetAmount:0,targetDate:'',movements:[],archived:false};}
 function upsertDebt(s,{id='',name,total,due=''}){
- name=String(name||'').trim();total=positive(total);if(!name)throw Error('Dê um nome à dívida.');if(due&&!validDate(due))throw Error('Confira o vencimento.');let d=s.debts.find(d=>d.id===id);
- if(d){const before=debtBalance(s,d);d.name=name;d.due=due;if(cents(total)!==cents(before))d.movements.push({id:uid(),type:'adjustment',amount:money(total-before),date:today(),note:'Saldo corrigido'});const c=cat(s,d.pocketId);if(c&&linkedDebts(s,c.id).length===1){c.label=name;c.debtId=d.id;}recordActivity(s,'debt',d.id,`Dívida atualizada · ${name}`,before,total,'','set_balance');}
- else {if(!total)throw Error('Informe o valor da dívida.');d={id:uid(),name,initialTotal:total,due,movements:[],archived:false};const c=debtPocket(d);d.pocketId=c.id;s.debts.push(d);s.allocationCategories.push(c);s.allocation[c.id]=0;recordActivity(s,'debt',d.id,`Dívida · ${name}`,0,total,'','create');}
+ name=String(name||'').trim();total=positive(total);if(!name)throw Error('Dê um nome ao compromisso.');if(due&&!validDate(due))throw Error('Confira o vencimento.');let d=s.debts.find(d=>d.id===id);
+ if(d){const before=debtBalance(s,d);d.name=name;d.due=due;if(cents(total)!==cents(before))d.movements.push({id:uid(),type:'adjustment',amount:money(total-before),date:today(),note:'Saldo corrigido'});const c=cat(s,d.pocketId);if(c&&linkedDebts(s,c.id).length===1){c.label=name;c.debtId=d.id;}recordActivity(s,'debt',d.id,`Compromisso atualizado · ${name}`,before,total,'','set_balance');}
+ else {if(!total)throw Error('Informe o valor do compromisso.');d={id:uid(),name,initialTotal:total,due,movements:[],archived:false};const c=debtPocket(d);d.pocketId=c.id;s.debts.push(d);s.allocationCategories.push(c);s.allocation[c.id]=0;recordActivity(s,'debt',d.id,`Compromisso · ${name}`,0,total,'','create');}
  const cp=cat(s,d.pocketId);if(cp){cp.planningPaused=false;if(total>0){cp.archived=false;cp.closedForDebt=false;d.settledAt='';}}
  s.preferences.autoConfigured=true;return d;
 }
@@ -263,14 +263,14 @@ function finishDebtPocket(s,id,date=today()){
  const c=cat(s,id);if(!c||c.archived||linkedDebts(s,id).some(d=>debtBalance(s,d)>0))return;
  if(!linkedDebts(s,id).length)return;
  const surplus=Math.max(0,pocketCents(s,id)),freeC=primaryFree(s);
- if(surplus&&freeC)transferEntries(s,id,{[freeC.id]:surplus},{date,note:'Sobra da dívida quitada',reason:'debt_settled'});
+ if(surplus&&freeC)transferEntries(s,id,{[freeC.id]:surplus},{date,note:'Sobra do compromisso quitado',reason:'debt_settled'});
  if(pocketCents(s,id)!==0)return; // An old inconsistent balance is never hidden.
  c.closedForDebt=true;c.archived=true;retireAllocation(s,id);
- recordActivity(s,'pocket',id,`Cofrinho concluído · ${c.label}`,0,0,'Dívida quitada; histórico preservado','archive',date);
+ recordActivity(s,'pocket',id,`Cofrinho concluído · ${c.label}`,0,0,'Compromisso quitado; histórico preservado','archive',date);
 }
 function fundingSignature(s){return JSON.stringify({month:planningMonth(s),mode:s.preferences.allocationMode,configured:s.preferences.autoConfigured,allocation:s.allocation,categories:s.allocationCategories.map(c=>({id:c.id,archived:!!c.archived,paused:!!c.planningPaused,amount:funding(s,c).amount,date:funding(s,c).date,balance:pocketCents(s,c.id),used:cycleSpent(s,c)})),debts:s.debts.map(d=>({id:d.id,pocketId:d.pocketId,archived:d.archived,balance:debtBalance(s,d),due:d.due}))});}
 function settlementPreview(s,id,sourceId){
- const d=s.debts.find(d=>d.id===id&&!d.archived);if(!d)throw Error('Dívida não encontrada.');
+ const d=s.debts.find(d=>d.id===id&&!d.archived);if(!d)throw Error('Compromisso não encontrado.');
  const f=debtFunding(s,d),source=sourceId===undefined?d.pocketId:sourceId,c=cat(s,source);
  if(source&&(!c||c.archived)&&f.balance>0)throw Error('Cofrinho de origem indisponível.');
  const available=source===d.pocketId?cents(f.reserved):Math.max(0,pocketCents(s,source)),funded=Math.min(cents(f.balance),available);
@@ -281,7 +281,7 @@ function settleDebt(s,id,{date=today(),note='',sourceId,allowExternal=false,expe
  if(expectedSignature&&expectedSignature!==p.signature)throw Error('Os valores mudaram. Revise a quitação.');
  if(!validDate(date)||date>today())throw Error('Use a data do pagamento já realizado.');
  if(p.externalCents&&!allowExternal)throw Error('Confirme o valor pago fora desta reserva.');
- if(!p.amountCents){const c=cat(s,d.pocketId);if(c?.archived)throw Error('Essa dívida já foi quitada.');finishDebtPocket(s,d.pocketId,date);return {funded:0,external:0};}
+ if(!p.amountCents){const c=cat(s,d.pocketId);if(c?.archived)throw Error('Esse compromisso já foi quitado.');finishDebtPocket(s,d.pocketId,date);return {funded:0,external:0};}
  // For shared legacy pockets, never spend another debt's reserved share.
  return payDebt(s,id,p.balance,{date,note:note||'Quitação confirmada',sourceId:p.sourceId,fundedLimit:p.fundedCents/100});
 }
@@ -303,7 +303,7 @@ function distributeFree(s,amount,{sourceId=primaryFree(s)?.id,expectedSignature,
  return p;
 }
 function payDebt(s,id,amount,{date=today(),note='',sourceId,fundedLimit}={}){
- const d=s.debts.find(d=>d.id===id&&!d.archived);if(!d)throw Error('Dívida não encontrada.');amount=positive(amount);const before=debtBalance(s,d);if(!amount||cents(amount)>cents(before))throw Error('O pagamento deve ser maior que zero e não ultrapassar a dívida.');if(!validDate(date)||date>today())throw Error('Use a data do pagamento já realizado.');
+ const d=s.debts.find(d=>d.id===id&&!d.archived);if(!d)throw Error('Compromisso não encontrado.');amount=positive(amount);const before=debtBalance(s,d);if(!amount||cents(amount)>cents(before))throw Error('O pagamento deve ser maior que zero e não ultrapassar o compromisso.');if(!validDate(date)||date>today())throw Error('Use a data do pagamento já realizado.');
  const source=sourceId===undefined?d.pocketId:sourceId;
  if(source&&(!cat(s,source)||cat(s,source).archived))throw Error('Cofrinho de origem não encontrado.');
  const funded=source?Math.min(cents(amount),Math.max(0,pocketCents(s,source)),fundedLimit===undefined?Infinity:cents(positive(fundedLimit)))/100:0,link=uid();
@@ -313,7 +313,7 @@ function payDebt(s,id,amount,{date=today(),note='',sourceId,fundedLimit}={}){
  if(debtBalance(s,d)===0){d.settledAt=date;finishDebtPocket(s,d.pocketId,date);}
  return {funded,external:money(amount-funded)};
 }
-function archiveDebt(s,id){const d=s.debts.find(d=>d.id===id);if(!d)return;d.archived=true;const c=cat(s,d.pocketId);if(c&&!linkedDebts(s,c.id).length){c.role='custom';c.debtId='';c.targetAmount=0;c.targetDate='';}recordActivity(s,'debt',id,`Dívida arquivada · ${d.name}`,debtBalance(s,d),debtBalance(s,d),'Saldo do cofrinho preservado','archive');}
+function archiveDebt(s,id){const d=s.debts.find(d=>d.id===id);if(!d)return;d.archived=true;const c=cat(s,d.pocketId);if(c&&!linkedDebts(s,c.id).length){c.role='custom';c.debtId='';c.targetAmount=0;c.targetDate='';}recordActivity(s,'debt',id,`Compromisso arquivado · ${d.name}`,debtBalance(s,d),debtBalance(s,d),'Saldo do cofrinho preservado','archive');}
 
 function previewMove(s,id,action,amount,{destinationId=''}={}){
  const c=cat(s,id);if(!c||c.archived)throw Error('Cofrinho não encontrado.');
@@ -349,7 +349,7 @@ function move(s,id,action,amount,{date=today(),note='',destinationId=''}={}){
   return p;
  }
  if(action==='spend'){
-  if(linkedDebts(s,id).length)throw Error('Registre o pagamento na dívida vinculada.');
+  if(linkedDebts(s,id).length)throw Error('Registre o pagamento no compromisso vinculado.');
   if(!amount||cents(amount)>Math.max(0,pocketCents(s,id)))throw Error('Esse uso ultrapassa o saldo do cofrinho.');
  }else if(action==='deposit'){if(!amount)throw Error('Informe quanto colocou de fora no cofrinho.');}
  else if(action==='adjustment'){delta=money(amount-before);if(!delta)return;}
@@ -384,7 +384,7 @@ function resetPlanning(s,{expectedSignature}={}){
  s.preferences.allocationMode='auto';s.preferences.autoConfigured=false;
  s.planning.resets.push({id,kind:'reset',createdAt:new Date().toISOString(),date:today(),status:'done',before,currency:s.preferences.currency});
  s.planning.undo={id,kind:'reset',before,expected:planSignature(s)};
- recordActivity(s,'planning',id,'Planejamento recomeçado',0,0,'Saldos, ganhos, dívidas e pagamentos preservados','planning_reset');
+ recordActivity(s,'planning',id,'Planejamento recomeçado',0,0,'Saldos, ganhos, compromissos e pagamentos preservados','planning_reset');
  return id;
 }
 function monthMetrics(s,month){
@@ -439,11 +439,11 @@ function upgradePlanningUndo(s){
 function restoreDebt(s,id){
  const d=s.debts.find(d=>d.id===id);if(!d)return;
  d.archived=false;const c=cat(s,d.pocketId);if(c&&debtBalance(s,d)>0){c.archived=false;c.closedForDebt=false;c.role='debt';c.debtId=d.id;}
- recordActivity(s,'debt',id,`Dívida restaurada · ${d.name}`,debtBalance(s,d),debtBalance(s,d),'','archive');
+ recordActivity(s,'debt',id,`Compromisso restaurado · ${d.name}`,debtBalance(s,d),debtBalance(s,d),'','archive');
 }
 function restorePocket(s,id){
  const c=cat(s,id);if(!c)return;
- if(c.closedForDebt)throw Error('Essa dívida já foi quitada. Edite a dívida para registrar um novo saldo.');
+ if(c.closedForDebt)throw Error('Esse compromisso já foi quitado. Edite o compromisso para registrar um novo saldo.');
  c.archived=false;
 }
 function validate(s){for(const t of s.transactions){if(allocatedCents(t)>cents(t.value))throw Error('Um ganho tem mais dinheiro distribuído do que recebido.');}if(!CURRENCIES[s.preferences.currency])throw Error('Moeda inválida.');return true;}
