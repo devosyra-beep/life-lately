@@ -33,7 +33,7 @@ html=html.replaceAll('"../','"./');
 if(html.includes('"../'))throw Error('Sobrou um caminho ../ no HTML do app.');
 
 // platform.js precisa existir antes de app.js; defer preserva a ordem de declaração.
-html=html.replace('<script defer src="./core.js"></script>','<script defer src="./platform.js"></script>\n<script defer src="./core.js"></script>');
+html=html.replace(/<script defer src="\.\/core\.js(?:\?[^\"]*)?"><\/script>/,match=>`<script defer src="./platform.js"></script>\n${match}`);
 if(!html.includes('platform.js'))throw Error('Não foi possível injetar platform.js.');
 writeFileSync(join(out,'index.html'),html);
 

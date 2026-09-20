@@ -1,8 +1,8 @@
-/* Life Lately v39. Two pages, one origin and one app identity.
+/* Life Lately v40. Two pages, one origin and one app identity.
  * Caches only public files. IndexedDB, localStorage and decrypted app data are untouched.
- * Activation is explicit while tabs are open; do not reload an unsaved app session.
+ * Mutable files are network-first so an old cache cannot hide a published update.
  */
-const CACHE='life-lately-v39-clean-access-20260920';
+const CACHE='life-lately-v40-network-first-20260920';
 const ROOT=new URL('./',self.location.href);
 const ASSETS=[
   "./",
@@ -23,12 +23,12 @@ const ASSETS=[
 ];
 const canonical=path=>new URL(path,ROOT).href;
 const STATIC=new Set(ASSETS.map(canonical));
+const CACHE_FIRST=new Set(['./vendor/supabase-2.116.0.js','./icons/icon-192.png','./icons/icon-512.png','./assets/landing/favicon-original.ico'].map(canonical));
 const LANDING=canonical('./'),APP=canonical('./app/');
 self.addEventListener('install',event=>event.waitUntil((async()=>{
   const cache=await caches.open(CACHE);
   await cache.addAll(ASSETS);
-  // v27 intentionally takes over immediately once: older releases cached the login at '/'.
-  // skipWaiting replaces only the service worker; IndexedDB/localStorage financial data is untouched.
+  // Updates replace only public static caches; IndexedDB/localStorage financial data is untouched.
   await self.skipWaiting();
 })()));
 self.addEventListener('message',event=>{if(event.data?.type==='SKIP_WAITING')self.skipWaiting();});
@@ -56,15 +56,15 @@ self.addEventListener('fetch',event=>{
   else return; // Unknown URLs remain 404s; never turn every route into the login.
   event.respondWith((async()=>{
    const cache=await caches.open(CACHE);
-   if(key===LANDING)return fromNetwork(request,cache,key);
-   return (await cache.match(key))||fromNetwork(canonical('./app/'),cache,key);
+   const networkRequest=key===APP&&relative!=='app/'?APP:request;
+   return fromNetwork(networkRequest,cache,key);
   })());
   return;
  }
  if(!STATIC.has(key))return;
  event.respondWith((async()=>{
   const cache=await caches.open(CACHE);
-  if(relative==='assets/landing/landing.css'||relative==='assets/landing/landing.js'||relative==='manifest.webmanifest')return fromNetwork(request,cache,key);
-  return (await cache.match(key))||fromNetwork(request,cache,key);
+  if(CACHE_FIRST.has(key))return (await cache.match(key))||fromNetwork(request,cache,key);
+  return fromNetwork(request,cache,key);
  })());
 });

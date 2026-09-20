@@ -118,7 +118,9 @@ assert '.provider-button.google{position:relative;grid-template-columns:1fr;text
 assert 'googleEnabled:true' in cloud_js
 assert 'sb_publishable_' in cloud_js and 'service_role' not in cloud_js.lower()
 assert 'kgyztrybhrmsxzwpjntq.supabase.co' in cloud_js
-assert 'vendor/supabase-2.116.0.js' in (R / 'app/index.html').read_text(encoding='utf-8')
+app_html = (R / 'app/index.html').read_text(encoding='utf-8')
+assert 'vendor/supabase-2.116.0.js' in app_html
+assert all(f'../{asset}?v=40' in app_html for asset in ('styles.css', 'core.js', 'storage.js', 'cloud.js', 'app.js'))
 ok('Acesso Google está ativo com chave publicável; Apple permanece desativado e o modo conhecer é local')
 
 assert not re.search(r'(?:localStorage|indexedDB|LLStore|core\.js|storage\.js|(?<!/)app\.js)', source)
@@ -134,11 +136,20 @@ assert 'family=Manrope' in source and 'family=Manrope' in (R / 'app/index.html')
 assert 'fonts.googleapis.com' in (R / '_headers').read_text(encoding='utf-8')
 ok('Manrope é aplicada com fallback, sem adicionar binários de fonte ao projeto')
 
-assert 'life-lately-v39-clean-access-20260920' in sw
+assert 'life-lately-v40-network-first-20260920' in sw
 assert 'assets/landing/landing.css' in sw and 'favicon-original.ico' in sw
 assert 'cloud.js' in sw and 'vendor/supabase-2.116.0.js' in sw
+assert "return fromNetwork(request,cache,key)" in sw
 assert not any(photo in sw for photo in ('hero-night', 'night-table', 'golden-sea', 'life-lately-sunset'))
 assert not any(re.match(r'\s*/\*\s+', line) for line in (R / '_redirects').read_text(encoding='utf-8').splitlines())
-ok('Precache v39 contém a nova home, cliente de nuvem e não redireciona rotas desconhecidas')
+ok('Precache v40 atualiza arquivos mutáveis pela rede e mantém fallback offline')
+
+refresh = (R / 'refresh.html').read_text(encoding='utf-8')
+refresh_js = (R / 'refresh.js').read_text(encoding='utf-8')
+assert './refresh.js?v=40' in refresh
+assert 'registration.unregister()' in refresh_js and "name.startsWith('life-lately-')" in refresh_js
+assert "location.replace(target)" in refresh_js and "./app/?v=40&refreshed=1" in refresh_js
+assert not re.search(r'(?:localStorage|indexedDB|LLStore)', refresh + refresh_js)
+ok('Rota de recuperação remove apenas caches estáticos antigos e reabre o app atualizado')
 
 print(f'\n{count} verificações da landing concluídas.')
